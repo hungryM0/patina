@@ -1860,6 +1860,60 @@ button {
   opacity: 0.28;
 }
 
+.history-activity-popover {
+  position: fixed;
+  z-index: 70;
+  width: 284px;
+  max-width: calc(100vw - 24px);
+  transform-origin: top center;
+  translate: -50% 0;
+  border: 1px solid var(--qp-border-subtle);
+  border-radius: var(--qp-radius-panel);
+  background: var(--qp-bg-canvas);
+  box-shadow: var(--qp-shadow-overlay);
+  padding: 10px;
+}
+
+.history-activity-popover-title {
+  margin-bottom: 7px;
+  color: var(--qp-text-primary);
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.history-activity-popover-list {
+  display: grid;
+  gap: 6px;
+}
+
+.history-activity-popover-item {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 10px;
+  align-items: start;
+  min-width: 0;
+  border: 1px solid var(--qp-border-subtle);
+  border-radius: 7px;
+  background: var(--qp-bg-panel);
+  color: var(--qp-text-secondary);
+  font-size: 10px;
+  line-height: 1.45;
+  overflow-wrap: anywhere;
+  padding: 7px 8px;
+}
+
+.history-activity-popover-item-title {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.history-activity-popover-item-time {
+  color: var(--qp-text-tertiary);
+  font-size: 9px;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
 .data-heatmap {
   min-width: 0;
   --data-heatmap-cell-size: 12px;

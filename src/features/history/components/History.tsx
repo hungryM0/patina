@@ -8,7 +8,7 @@ import {
   YAxis,
   ResponsiveContainer,
 } from "recharts";
-import { ChevronLeft, ChevronRight, Clock, Minus, Plus } from "lucide-react";
+import { ChevronDown, ChevronLeft, ChevronRight, Clock, Minus, Plus } from "lucide-react";
 import { type HistorySession } from "../../../shared/lib/sessionReadRepository";
 import { UI_TEXT } from "../../../shared/copy/uiText.ts";
 import {
@@ -49,6 +49,38 @@ const startOfMonth = (date: Date) => new Date(date.getFullYear(), date.getMonth(
 const addMonths = (date: Date, delta: number) => new Date(date.getFullYear(), date.getMonth() + delta, 1);
 const isSameDay = (left: Date, right: Date) => left.toDateString() === right.toDateString();
 const formatCalendarMonth = (date: Date) => UI_TEXT.date.yearMonthLabel(date.getFullYear(), date.getMonth() + 1);
+type TimelineDetailsPopover = {
+  sessionId: number;
+  titleSamples: TimelineDetailTitle[];
+  left: number;
+  top: number;
+};
+
+type TimelineDetailTitle = {
+  title: string;
+  startTime: number;
+  endTime: number | null;
+};
+
+function cleanTimelineDetailTitle(sample: TimelineDetailTitle, appName: string): TimelineDetailTitle {
+  const normalizedTitle = sample.title.trim();
+  const normalizedAppName = appName.trim();
+  if (!normalizedTitle || !normalizedAppName) {
+    return { ...sample, title: normalizedTitle };
+  }
+
+  const suffixPattern = new RegExp(`\\s+-\\s+${normalizedAppName.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}$`, "i");
+  return {
+    ...sample,
+    title: normalizedTitle.replace(suffixPattern, "").trim(),
+  };
+}
+
+function cleanTimelineDetailTitles(samples: TimelineDetailTitle[], appName: string) {
+  return samples
+    .map((sample) => cleanTimelineDetailTitle(sample, appName))
+    .filter((sample) => sample.title);
+}
 const buildCalendarDays = (month: Date) => {
   const monthStart = startOfMonth(month);
   const mondayOffset = (monthStart.getDay() + 6) % 7;
@@ -91,7 +123,37 @@ export default function History({
   const [nowMs, setNowMs] = useState(() => initialCachedSnapshot?.fetchedAtMs ?? Date.now());
   const [loading, setLoading] = useState(!initialCachedSnapshot);
   const [hasFetchedOnce, setHasFetchedOnce] = useState(Boolean(initialCachedSnapshot));
+  const [timelineDetailsPopover, setTimelineDetailsPopover] = useState<TimelineDetailsPopover | null>(null);
+  const timelineDetailsPopoverRef = useRef<HTMLDivElement | null>(null);
   const hasLoadedRef = useRef(false);
+
+  const toggleTimelineSessionDetails = useCallback((
+    sessionId: number,
+    appName: string,
+    titleSamples: TimelineDetailTitle[],
+    trigger: HTMLElement,
+  ) => {
+    setTimelineDetailsPopover((current) => {
+      if (current?.sessionId === sessionId) {
+        return null;
+      }
+
+      const triggerRect = trigger.getBoundingClientRect();
+      const popoverHalfWidth = 142;
+      const viewportPadding = 12;
+      const centeredLeft = triggerRect.left + triggerRect.width / 2;
+
+      return {
+        sessionId,
+        titleSamples: cleanTimelineDetailTitles(titleSamples, appName),
+        left: Math.min(
+          Math.max(centeredLeft, popoverHalfWidth + viewportPadding),
+          window.innerWidth - popoverHalfWidth - viewportPadding,
+        ),
+        top: triggerRect.bottom + 8,
+      };
+    });
+  }, []);
 
   const loadData = useCallback(async (showLoading: boolean = false) => {
     const cachedSnapshot = getHistorySnapshotCache(selectedDate);
@@ -207,6 +269,33 @@ export default function History({
       window.removeEventListener("keydown", handleKeyDown);
     };
   }, [calendarOpen]);
+
+  useEffect(() => {
+    if (!timelineDetailsPopover) return;
+
+    const handlePointerDown = (event: PointerEvent) => {
+      const target = event.target as Node;
+      if (timelineDetailsPopoverRef.current?.contains(target)) return;
+      setTimelineDetailsPopover(null);
+    };
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        setTimelineDetailsPopover(null);
+      }
+    };
+    const handleScroll = () => {
+      setTimelineDetailsPopover(null);
+    };
+
+    window.addEventListener("pointerdown", handlePointerDown);
+    window.addEventListener("keydown", handleKeyDown);
+    window.addEventListener("scroll", handleScroll, true);
+    return () => {
+      window.removeEventListener("pointerdown", handlePointerDown);
+      window.removeEventListener("keydown", handleKeyDown);
+      window.removeEventListener("scroll", handleScroll, true);
+    };
+  }, [timelineDetailsPopover]);
 
   const isToday = selectedDate.toDateString() === today.toDateString();
   const showInitialLoading = loading && !hasFetchedOnce;
@@ -467,6 +556,18 @@ export default function History({
                   const mapped = AppClassification.mapApp(session.exeName, { appName: session.displayName });
                   const overrideColor = AppClassification.getUserOverride(session.exeName)?.color;
                   const accentColor = overrideColor ?? iconThemeColors[session.exeName] ?? mapped.color;
+                  const titleSamples = session.titleSamples.length > 0
+                    ? session.titleSamples
+                    : (session.displayTitle ? [session.displayTitle] : []);
+                  const titleSampleDetails = session.titleSampleDetails.length > 0
+                    ? session.titleSampleDetails
+                    : titleSamples.map((title) => ({
+                      title,
+                      startTime: session.startTime,
+                      endTime: session.endTime,
+                    }));
+                  const hasDetails = titleSampleDetails.length > 0;
+                  const isExpanded = timelineDetailsPopover?.sessionId === session.id;
 
                   return (
                     <div
@@ -484,19 +585,36 @@ export default function History({
                           <div className="text-[10px] font-semibold opacity-35 text-[var(--qp-text-secondary)]">{mapped.category[0].toUpperCase()}</div>
                         )}
                       </div>
-                      <div className="flex-1 min-w-0">
-                        <div className="font-semibold text-[var(--qp-text-primary)] text-xs truncate flex items-center gap-2">
-                          {session.displayName}
-                          {session.mergedCount > 1 && (
-                            <span className="px-1.5 py-0.5 rounded-[6px] border border-[var(--qp-border-subtle)] bg-[var(--qp-bg-panel)] text-[var(--qp-text-secondary)] text-[9px] font-semibold">
-                              {UI_TEXT.history.mergedCount(session.mergedCount)}
-                            </span>
-                          )}
+                      <div className="flex flex-1 min-w-0 items-center gap-1.5">
+                        <div className="min-w-0 truncate text-sm font-semibold text-[var(--qp-text-primary)]">
+                            {session.displayName}
                         </div>
-                        {session.displayTitle && (
-                          <div className="text-[10px] text-[var(--qp-text-tertiary)] truncate mt-0.5">
-                            {session.displayTitle}
-                          </div>
+                        <span className="inline-flex h-[18px] shrink-0 items-center rounded-[5px] border border-[var(--qp-border-subtle)] bg-[var(--qp-bg-panel)] px-1.5 text-[9px] font-semibold leading-none text-[var(--qp-text-tertiary)]">
+                          {UI_TEXT.history.mergedCount(session.mergedCount)}
+                        </span>
+                        {hasDetails && (
+                          <button
+                            type="button"
+                            onPointerDown={(event) => event.stopPropagation()}
+                            onClick={(event) => toggleTimelineSessionDetails(
+                              session.id,
+                              session.displayName,
+                              titleSampleDetails,
+                              event.currentTarget,
+                            )}
+                            aria-expanded={isExpanded}
+                            aria-label={UI_TEXT.accessibility.history.toggleActivityDetails(
+                              isExpanded,
+                              session.displayName,
+                            )}
+                            className="qp-button-secondary inline-flex h-[18px] w-[18px] shrink-0 items-center justify-center rounded-[5px] p-0 text-[var(--qp-text-tertiary)]"
+                          >
+                            <ChevronDown
+                              size={11}
+                              className={`transition-transform ${isExpanded ? "rotate-180" : ""}`}
+                              aria-hidden="true"
+                            />
+                          </button>
                         )}
                       </div>
                       <div className="text-right flex-shrink-0">
@@ -510,6 +628,42 @@ export default function History({
                   );
                 })}
               </AnimatePresence>
+              {createPortal((
+                <AnimatePresence>
+                  {timelineDetailsPopover && (
+                    <motion.div
+                      ref={timelineDetailsPopoverRef}
+                      initial={{ opacity: 0, y: -4, scale: 0.99 }}
+                      animate={{ opacity: 1, y: 0, scale: 1 }}
+                      exit={{ opacity: 0, y: -4, scale: 0.99 }}
+                      transition={{ duration: 0.12, ease: "easeOut" }}
+                      className="history-activity-popover"
+                      style={{
+                        left: timelineDetailsPopover.left,
+                        top: timelineDetailsPopover.top,
+                      }}
+                    >
+                      <div className="history-activity-popover-list">
+                        {timelineDetailsPopover.titleSamples.map((sample, index) => (
+                          <div
+                            key={`${timelineDetailsPopover.sessionId}-${index}-${sample.title}`}
+                            className="history-activity-popover-item"
+                            title={sample.title}
+                          >
+                            <span className="history-activity-popover-item-title">
+                              {sample.title}
+                            </span>
+                            <span className="history-activity-popover-item-time">
+                              {formatTime(sample.startTime)}
+                              {sample.endTime ? ` - ${formatTime(sample.endTime)}` : ` ${UI_TEXT.history.untilNow}`}
+                            </span>
+                          </div>
+                        ))}
+                      </div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              ), document.body)}
             </div>
           )}
         </div>

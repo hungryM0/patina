@@ -188,6 +188,57 @@ export function runCompilerAndAggregationTests() {
     assert.equal(timeline[0].duration, 120_000);
   });
 
+  runTest("timeline title details keep separate first and last times", () => {
+    const sessions: HistorySession[] = [
+      makeSession({
+        id: 1,
+        exeName: "EditorApp.exe",
+        appName: "Editor App",
+        windowTitle: "README.md",
+        startTime: 0,
+        endTime: 60_000,
+        duration: 60_000,
+      }),
+      makeSession({
+        id: 2,
+        exeName: "EditorApp.exe",
+        appName: "Editor App",
+        windowTitle: "Settings",
+        startTime: 90_000,
+        endTime: 150_000,
+        duration: 60_000,
+      }),
+      makeSession({
+        id: 3,
+        exeName: "EditorApp.exe",
+        appName: "Editor App",
+        windowTitle: "README.md",
+        startTime: 180_000,
+        endTime: 240_000,
+        duration: 60_000,
+      }),
+    ];
+    const compiled = compileSessions(sessions, {
+      startMs: 0,
+      endMs: 300_000,
+      minSessionSecs: 0,
+    });
+    const timeline = buildTimelineSessions(compiled, 180);
+
+    assert.equal(timeline.length, 1);
+    assert.deepEqual(
+      timeline[0].titleSampleDetails.map((sample) => ({
+        title: sample.title,
+        startTime: sample.startTime,
+        endTime: sample.endTime,
+      })),
+      [
+        { title: "README.md", startTime: 0, endTime: 240_000 },
+        { title: "Settings", startTime: 90_000, endTime: 150_000 },
+      ],
+    );
+  });
+
   runTest("timeline grouping can follow persisted continuity anchors even when the visible interruption exceeds the merge threshold", () => {
     const sessions: HistorySession[] = [
       makeSession({

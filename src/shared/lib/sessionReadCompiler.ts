@@ -22,6 +22,12 @@ export interface CompileSessionsOptions extends SessionRange {
   keepLatestLiveSession?: boolean;
 }
 
+export interface TitleSampleDetail {
+  title: string;
+  startTime: number;
+  endTime: number;
+}
+
 export interface CompiledSession extends HistorySession {
   // Stable grouping key for stats and timeline merges.
   appKey: string;
@@ -31,6 +37,7 @@ export interface CompiledSession extends HistorySession {
   displayName: string;
   displayTitle: string;
   titleSamples: string[];
+  titleSampleDetails: TitleSampleDetail[];
   sourceIds: number[];
   diagnosticCodes: SessionDiagnosticCode[];
   suspiciousDuration: number;
@@ -58,8 +65,33 @@ function normalizeTitle(title: string, displayName: string) {
   return normalized.toLowerCase() === displayName.trim().toLowerCase() ? "" : normalized;
 }
 
-function mergeTitleSamples(current: string[], incoming: string[]) {
-  return Array.from(new Set([...current, ...incoming].filter(Boolean))).slice(0, 6);
+function mergeTitleSampleDetails(
+  current: TitleSampleDetail[],
+  incoming: TitleSampleDetail[],
+) {
+  const merged = current.map((sample) => ({ ...sample }));
+
+  for (const sample of incoming) {
+    const title = sample.title.trim();
+    if (!title) continue;
+
+    const existing = merged.find((candidate) => candidate.title === title);
+    if (existing) {
+      existing.startTime = Math.min(existing.startTime, sample.startTime);
+      existing.endTime = Math.max(existing.endTime, sample.endTime);
+      continue;
+    }
+
+    if (merged.length < 6) {
+      merged.push({ ...sample, title });
+    }
+  }
+
+  return merged;
+}
+
+function titleSamplesFromDetails(titleSampleDetails: TitleSampleDetail[]) {
+  return titleSampleDetails.map((sample) => sample.title);
 }
 
 function summarizeTitleSamples(titleSamples: string[]) {
@@ -163,6 +195,11 @@ function prepareSession(
     displayName,
     displayTitle: normalizedTitle,
     titleSamples: normalizedTitle ? [normalizedTitle] : [],
+    titleSampleDetails: normalizedTitle ? [{
+      title: normalizedTitle,
+      startTime: session.startTime,
+      endTime: rawEndTime,
+    }] : [],
     sourceIds: [session.id],
     diagnosticCodes: [...(session.diagnosticCodes ?? [])],
     suspiciousDuration: Math.max(0, session.suspiciousDuration ?? 0),
@@ -182,20 +219,32 @@ function clipCompiledSession(
     return null;
   }
 
+  const titleSampleDetails = session.titleSampleDetails
+    .map((sample) => ({
+      ...sample,
+      startTime: Math.max(sample.startTime, clippedStart),
+      endTime: Math.min(sample.endTime, clippedEnd),
+    }))
+    .filter((sample) => sample.endTime > sample.startTime);
+
   return {
     ...session,
     startTime: clippedStart,
     endTime: clippedEnd,
     duration: clippedEnd - clippedStart,
+    titleSampleDetails,
+    titleSamples: titleSamplesFromDetails(titleSampleDetails),
     suspiciousDuration: Math.min(Math.max(0, session.suspiciousDuration), clippedEnd - clippedStart),
   };
 }
 
 function finalizeCompiledSession(session: CompiledSession): CompiledSession {
-  const displayTitle = summarizeTitleSamples(session.titleSamples);
+  const titleSamples = titleSamplesFromDetails(session.titleSampleDetails);
+  const displayTitle = summarizeTitleSamples(titleSamples);
 
   return {
     ...session,
+    titleSamples,
     windowTitle: displayTitle,
     displayTitle,
   };
@@ -231,7 +280,11 @@ function buildCompiledSessionBase(
         session.continuityGroupStartTime,
       );
       previous.mergedCount += session.mergedCount;
-      previous.titleSamples = mergeTitleSamples(previous.titleSamples, session.titleSamples);
+      previous.titleSampleDetails = mergeTitleSampleDetails(
+        previous.titleSampleDetails,
+        session.titleSampleDetails,
+      );
+      previous.titleSamples = titleSamplesFromDetails(previous.titleSampleDetails);
       previous.sourceIds = [...previous.sourceIds, ...session.sourceIds];
       previous.diagnosticCodes = mergeDiagnosticCodes(previous.diagnosticCodes, session.diagnosticCodes);
       previous.suspiciousDuration += session.suspiciousDuration;
@@ -376,6 +429,7 @@ export function buildTimelineSessions(
     const current: TimelineSession = {
       ...sessions[i],
       titleSamples: [...sessions[i].titleSamples],
+      titleSampleDetails: sessions[i].titleSampleDetails.map((sample) => ({ ...sample })),
     };
     let j = i + 1;
 
@@ -404,7 +458,11 @@ export function buildTimelineSessions(
             nextCandidate.continuityGroupStartTime,
           );
           current.mergedCount += nextCandidate.mergedCount;
-          current.titleSamples = mergeTitleSamples(current.titleSamples, nextCandidate.titleSamples);
+          current.titleSampleDetails = mergeTitleSampleDetails(
+            current.titleSampleDetails,
+            nextCandidate.titleSampleDetails,
+          );
+          current.titleSamples = titleSamplesFromDetails(current.titleSampleDetails);
           current.sourceIds = [...current.sourceIds, ...nextCandidate.sourceIds];
           current.diagnosticCodes = mergeDiagnosticCodes(current.diagnosticCodes, nextCandidate.diagnosticCodes);
           current.suspiciousDuration += nextCandidate.suspiciousDuration;
