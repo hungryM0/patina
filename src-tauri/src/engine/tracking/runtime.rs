@@ -9,13 +9,13 @@ use super::{active_session, continuity, startup, transition, watchdog};
 #[cfg(test)]
 use crate::data::repositories::{sessions, tracker_settings};
 use crate::data::sqlite_pool::wait_for_sqlite_pool;
+use crate::data::tracking_runtime::TrackingRuntimeDataStore;
 #[cfg(test)]
 use crate::domain::tracking::TrackingDataChangedPayload;
 #[cfg(test)]
 use crate::domain::tracking::TRACKING_REASON_TRACKING_PAUSED_SEALED;
 use crate::domain::tracking::{TrackingStatusSnapshot, TRACKING_REASON_STATUS_CHANGED};
 use crate::platform::windows::foreground as tracker;
-use sqlx::{Pool, Sqlite};
 use std::sync::Arc;
 use tauri::{AppHandle, Emitter, Runtime};
 use tokio::time::{sleep, Duration};
@@ -45,7 +45,8 @@ pub async fn run<R: Runtime>(
     health_state: Arc<watchdog::RuntimeHealthState>,
 ) -> Result<(), String> {
     let pool = wait_for_sqlite_pool(&app).await?;
-    startup::initialize_tracker(&app, &pool)
+    let data = TrackingRuntimeDataStore::new(pool);
+    startup::initialize_tracker(&app, &data)
         .await
         .map_err(|error| format!("tracker initialization failed: {error}"))?;
 
@@ -59,9 +60,9 @@ pub async fn run<R: Runtime>(
         let window_info = poll_active_window_with_timeout().await?;
         let now_ms = now_ms();
         health_state.note_successful_sample(now_ms);
-        persist_tracker_runtime_timestamps(&pool, now_ms).await;
+        persist_tracker_runtime_timestamps(&data, now_ms).await;
         let (tracking_state, next_sustained_participation_state) =
-            load_tracking_loop_state(&pool, &window_info, now_ms, &sustained_participation_state)
+            load_tracking_loop_state(&data, &window_info, now_ms, &sustained_participation_state)
                 .await;
         sustained_participation_state = next_sustained_participation_state;
         let tracked_window = tracking_state.tracked_window;
@@ -72,7 +73,7 @@ pub async fn run<R: Runtime>(
                 now_ms,
             );
         let new_pending_continuity = continuity::load_pending_continuity(
-            &pool,
+            &data,
             last_window.as_ref(),
             last_tracking_status.as_ref(),
             &tracked_window,
@@ -82,7 +83,7 @@ pub async fn run<R: Runtime>(
         .await;
 
         if tracking_state.tracking_paused {
-            match seal_active_sessions_for_tracking_pause(&pool, now_ms).await {
+            match seal_active_sessions_for_tracking_pause(&data, now_ms).await {
                 Ok(Some(reason)) => {
                     let _ = emit_tracking_data_changed(&app, reason, now_ms as u64);
                 }
@@ -106,7 +107,7 @@ pub async fn run<R: Runtime>(
             &tracking_state.tracking_status,
         ) {
             match seal_active_sessions_for_passive_participation_timeout(
-                &pool,
+                &data,
                 &tracked_window,
                 now_ms,
                 tracking_state.sustained_participation_secs,
@@ -137,7 +138,7 @@ pub async fn run<R: Runtime>(
             &tracking_state.tracking_status,
         ) {
             match seal_active_sessions_for_continuity_timeout(
-                &pool,
+                &data,
                 &tracked_window,
                 now_ms,
                 tracking_state.continuity_window_secs,
@@ -170,7 +171,7 @@ pub async fn run<R: Runtime>(
 
         let mut did_emit_tracking_data_changed = false;
         match transition::apply_window_transition(
-            &pool,
+            &data,
             last_window.as_ref(),
             &tracked_window,
             now_ms,
@@ -231,11 +232,11 @@ fn should_emit_tracking_status_changed(
 }
 
 pub async fn load_current_tracking_snapshot(
-    pool: &Pool<Sqlite>,
+    data: &TrackingRuntimeDataStore,
 ) -> Result<CurrentTrackingSnapshotData, String> {
     let window_info = poll_active_window_with_timeout().await?;
     let (tracking_state, _) = load_tracking_loop_state(
-        pool,
+        data,
         &window_info,
         now_ms(),
         &SustainedParticipationRuntimeState::default(),
@@ -254,7 +255,8 @@ pub async fn handle_power_lifecycle_event<R: Runtime>(
     timestamp_ms: i64,
 ) -> Result<(), String> {
     let pool = wait_for_sqlite_pool(&app).await?;
-    let reason = apply_power_lifecycle_event(&pool, state, timestamp_ms)
+    let data = TrackingRuntimeDataStore::new(pool);
+    let reason = apply_power_lifecycle_event(&data, state, timestamp_ms)
         .await
         .map_err(|error| format!("power lifecycle transition failed: {error}"))?;
 
@@ -313,6 +315,10 @@ mod tests {
         pool.execute(db_schema::MIGRATION_6_SQL).await.unwrap();
         pool.execute(db_schema::MIGRATION_7_SQL).await.unwrap();
         pool
+    }
+
+    fn data_store(pool: &SqlitePool) -> TrackingRuntimeDataStore {
+        TrackingRuntimeDataStore::new(pool.clone())
     }
 
     #[test]
@@ -593,10 +599,11 @@ mod tests {
     fn missing_active_session_is_recovered_without_window_change() {
         tauri::async_runtime::block_on(async {
             let pool = setup_test_db().await;
+            let data = data_store(&pool);
             let window = make_window(&[]);
 
             let reason = transition::apply_window_transition(
-                &pool,
+                &data,
                 Some(&window),
                 &window,
                 5_000,
@@ -621,6 +628,7 @@ mod tests {
     fn metadata_refresh_updates_active_session_title() {
         tauri::async_runtime::block_on(async {
             let pool = setup_test_db().await;
+            let data = data_store(&pool);
             let original = make_window(&[("title", "Window A")]);
             let updated = make_window(&[
                 ("hwnd", "0x200"),
@@ -633,7 +641,7 @@ mod tests {
                 .unwrap());
 
             let reason = transition::apply_window_transition(
-                &pool,
+                &data,
                 Some(&original),
                 &updated,
                 5_000,
@@ -659,13 +667,14 @@ mod tests {
     fn lock_event_seals_active_session_immediately() {
         tauri::async_runtime::block_on(async {
             let pool = setup_test_db().await;
+            let data = data_store(&pool);
             let window = make_window(&[]);
 
             assert!(active_session::start_session(&pool, &window, 1_000)
                 .await
                 .unwrap());
 
-            let reason = apply_power_lifecycle_event(&pool, "lock", 5_000)
+            let reason = apply_power_lifecycle_event(&data, "lock", 5_000)
                 .await
                 .unwrap();
 
@@ -685,7 +694,8 @@ mod tests {
     fn unlock_event_does_not_mutate_sessions() {
         tauri::async_runtime::block_on(async {
             let pool = setup_test_db().await;
-            let reason = apply_power_lifecycle_event(&pool, "unlock", 5_000)
+            let data = data_store(&pool);
+            let reason = apply_power_lifecycle_event(&data, "unlock", 5_000)
                 .await
                 .unwrap();
 
@@ -704,13 +714,14 @@ mod tests {
     fn suspend_event_seals_active_session_immediately() {
         tauri::async_runtime::block_on(async {
             let pool = setup_test_db().await;
+            let data = data_store(&pool);
             let window = make_window(&[]);
 
             assert!(active_session::start_session(&pool, &window, 1_000)
                 .await
                 .unwrap());
 
-            let reason = apply_power_lifecycle_event(&pool, "suspend", 5_000)
+            let reason = apply_power_lifecycle_event(&data, "suspend", 5_000)
                 .await
                 .unwrap();
 
@@ -730,7 +741,8 @@ mod tests {
     fn resume_event_does_not_mutate_sessions() {
         tauri::async_runtime::block_on(async {
             let pool = setup_test_db().await;
-            let reason = apply_power_lifecycle_event(&pool, "resume", 5_000)
+            let data = data_store(&pool);
+            let reason = apply_power_lifecycle_event(&data, "resume", 5_000)
                 .await
                 .unwrap();
 
@@ -749,13 +761,14 @@ mod tests {
     fn tracking_pause_seals_active_session_and_returns_pause_reason() {
         tauri::async_runtime::block_on(async {
             let pool = setup_test_db().await;
+            let data = data_store(&pool);
             let window = make_window(&[]);
 
             assert!(active_session::start_session(&pool, &window, 1_000)
                 .await
                 .unwrap());
 
-            let reason = seal_active_sessions_for_tracking_pause(&pool, 5_000)
+            let reason = seal_active_sessions_for_tracking_pause(&data, 5_000)
                 .await
                 .unwrap();
 
@@ -775,8 +788,9 @@ mod tests {
     fn tracking_pause_without_active_session_is_a_noop() {
         tauri::async_runtime::block_on(async {
             let pool = setup_test_db().await;
+            let data = data_store(&pool);
 
-            let reason = seal_active_sessions_for_tracking_pause(&pool, 5_000)
+            let reason = seal_active_sessions_for_tracking_pause(&data, 5_000)
                 .await
                 .unwrap();
 
@@ -795,15 +809,16 @@ mod tests {
     fn lock_after_tracking_pause_does_not_double_seal_closed_session() {
         tauri::async_runtime::block_on(async {
             let pool = setup_test_db().await;
+            let data = data_store(&pool);
             let window = make_window(&[]);
 
             assert!(active_session::start_session(&pool, &window, 1_000)
                 .await
                 .unwrap());
-            let pause_reason = seal_active_sessions_for_tracking_pause(&pool, 5_000)
+            let pause_reason = seal_active_sessions_for_tracking_pause(&data, 5_000)
                 .await
                 .unwrap();
-            let lock_reason = apply_power_lifecycle_event(&pool, "lock", 8_000)
+            let lock_reason = apply_power_lifecycle_event(&data, "lock", 8_000)
                 .await
                 .unwrap();
 
@@ -824,15 +839,16 @@ mod tests {
     fn tracking_pause_after_lock_is_a_noop_for_already_closed_session() {
         tauri::async_runtime::block_on(async {
             let pool = setup_test_db().await;
+            let data = data_store(&pool);
             let window = make_window(&[]);
 
             assert!(active_session::start_session(&pool, &window, 1_000)
                 .await
                 .unwrap());
-            let lock_reason = apply_power_lifecycle_event(&pool, "lock", 5_000)
+            let lock_reason = apply_power_lifecycle_event(&data, "lock", 5_000)
                 .await
                 .unwrap();
-            let pause_reason = seal_active_sessions_for_tracking_pause(&pool, 8_000)
+            let pause_reason = seal_active_sessions_for_tracking_pause(&data, 8_000)
                 .await
                 .unwrap();
 
@@ -853,6 +869,7 @@ mod tests {
     fn lock_after_startup_seal_is_a_noop_for_already_closed_session() {
         tauri::async_runtime::block_on(async {
             let pool = setup_test_db().await;
+            let data = data_store(&pool);
             let window = make_window(&[]);
 
             assert!(active_session::start_session(&pool, &window, 1_000)
@@ -866,10 +883,10 @@ mod tests {
             .await
             .unwrap();
 
-            let startup_reason = startup::seal_startup_active_session_in_pool(&pool, 20_000)
+            let startup_reason = startup::seal_startup_active_session(&data, 20_000)
                 .await
                 .unwrap();
-            let lock_reason = apply_power_lifecycle_event(&pool, "lock", 25_000)
+            let lock_reason = apply_power_lifecycle_event(&data, "lock", 25_000)
                 .await
                 .unwrap();
 
@@ -890,6 +907,7 @@ mod tests {
     fn suspend_after_startup_seal_is_a_noop_for_already_closed_session() {
         tauri::async_runtime::block_on(async {
             let pool = setup_test_db().await;
+            let data = data_store(&pool);
             let window = make_window(&[]);
 
             assert!(active_session::start_session(&pool, &window, 1_000)
@@ -903,10 +921,10 @@ mod tests {
             .await
             .unwrap();
 
-            let startup_reason = startup::seal_startup_active_session_in_pool(&pool, 20_000)
+            let startup_reason = startup::seal_startup_active_session(&data, 20_000)
                 .await
                 .unwrap();
-            let suspend_reason = apply_power_lifecycle_event(&pool, "suspend", 25_000)
+            let suspend_reason = apply_power_lifecycle_event(&data, "suspend", 25_000)
                 .await
                 .unwrap();
 
@@ -927,6 +945,7 @@ mod tests {
     fn tracking_pause_after_startup_seal_is_a_noop_for_already_closed_session() {
         tauri::async_runtime::block_on(async {
             let pool = setup_test_db().await;
+            let data = data_store(&pool);
             let window = make_window(&[]);
 
             assert!(active_session::start_session(&pool, &window, 1_000)
@@ -940,10 +959,10 @@ mod tests {
             .await
             .unwrap();
 
-            let startup_reason = startup::seal_startup_active_session_in_pool(&pool, 20_000)
+            let startup_reason = startup::seal_startup_active_session(&data, 20_000)
                 .await
                 .unwrap();
-            let pause_reason = seal_active_sessions_for_tracking_pause(&pool, 25_000)
+            let pause_reason = seal_active_sessions_for_tracking_pause(&data, 25_000)
                 .await
                 .unwrap();
 

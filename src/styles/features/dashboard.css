@@ -1,0 +1,133 @@
+.dashboard-left-column {
+  height: 100%;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.dashboard-focus-card {
+  container-type: inline-size;
+  display: flex;
+  flex-direction: column;
+  flex: 0 0 clamp(300px, 34vh, 390px);
+}
+
+.dashboard-focus-layout {
+  display: grid;
+  grid-template-columns: minmax(142px, 168px) minmax(0, 1fr);
+  align-items: center;
+  gap: 1rem;
+  flex: 1;
+  align-content: center;
+}
+
+.dashboard-focus-chart {
+  height: 170px;
+  max-width: 168px;
+  margin: 0;
+}
+
+.dashboard-focus-ranking {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: 0.3rem;
+}
+
+.dashboard-focus-ranking-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 0.75rem;
+  min-height: 1.55rem;
+  font-size: 0.6875rem;
+}
+
+.dashboard-focus-ranking-dot {
+  width: 0.375rem;
+  height: 0.375rem;
+  flex: 0 0 auto;
+  border-radius: 999px;
+}
+
+.dashboard-focus-delta {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0.25rem;
+  margin-top: 0.65rem;
+  text-align: right;
+}
+
+@container (min-width: 440px) {
+  .dashboard-focus-layout {
+    grid-template-columns: minmax(190px, 220px) minmax(0, 1fr);
+    gap: 1.5rem;
+  }
+
+  .dashboard-focus-chart {
+    height: 210px;
+    max-width: 220px;
+  }
+
+  .dashboard-focus-ranking {
+    gap: 0.35rem;
+  }
+
+  .dashboard-focus-ranking-row {
+    gap: 1rem;
+    min-height: 1.8rem;
+    font-size: 0.75rem;
+  }
+}
+
+.dashboard-pulse-card {
+  flex: 1 1 0;
+  min-height: 260px;
+}
+
+.dashboard-pulse-chart {
+  min-height: 170px;
+}
+
+@media (max-height: 900px) {
+  .dashboard-focus-card {
+    flex-basis: clamp(250px, 32vh, 320px);
+    padding: 1.1rem;
+  }
+
+  .dashboard-focus-chart {
+    height: 150px;
+  }
+
+  .dashboard-pulse-card {
+    min-height: 225px;
+    max-height: none;
+  }
+
+  .dashboard-pulse-chart {
+    min-height: 150px;
+  }
+}
+
+@media (max-height: 780px) {
+  .dashboard-left-column {
+    overflow-y: auto;
+    padding-right: 0.2rem;
+  }
+}
+
+@media (max-width: 900px) {
+  .dashboard-workspace {
+    gap: 1rem;
+  }
+
+  .dashboard-left-column {
+    width: 42%;
+  }
+}
+
+@media (max-width: 1500px), (max-height: 860px) {
+  .dashboard-focus-card {
+    min-height: 240px;
+  }
+}

@@ -139,8 +139,8 @@ export default function Dashboard({
         )}
       />
 
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 md:gap-5 flex-1 min-h-0 overflow-y-auto lg:overflow-hidden pr-1">
-        <div className="lg:col-span-5 2xl:col-span-4 flex flex-col gap-4 md:gap-5 min-h-0 dashboard-left-column">
+      <div className="flex gap-4 md:gap-5 flex-1 min-h-0 overflow-hidden pr-1 dashboard-workspace">
+        <div className="w-5/12 flex flex-col gap-4 md:gap-5 min-h-0 dashboard-left-column">
           <div
             ref={focusCardRef}
             className="qp-panel p-5 md:p-6 relative overflow-hidden shrink-0 min-h-[250px] dashboard-focus-card"
@@ -231,7 +231,7 @@ export default function Dashboard({
           </div>
         </div>
 
-        <div className="lg:col-span-7 2xl:col-span-8 qp-panel p-5 md:p-6 flex flex-col overflow-hidden min-h-[420px] lg:min-h-0">
+        <div className="flex-1 qp-panel p-5 md:p-6 flex flex-col overflow-hidden min-h-0">
           <header className="flex justify-between items-center mb-5">
             <h3 className="font-semibold text-[var(--qp-text-primary)] text-base">{UI_TEXT.dashboard.topApps}</h3>
             <div className="qp-chip px-2.5 py-1 text-[10px] font-semibold text-[var(--qp-text-secondary)]">

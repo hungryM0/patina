@@ -1,9 +1,8 @@
+import type { DailySummary, HistorySession } from "../../../shared/types/sessions.ts";
 import type { TrackerHealthSnapshot } from "../../../shared/types/tracking.ts";
 import {
   getHistoryByDate,
   getSessionsInRange,
-  type DailySummary,
-  type HistorySession,
 } from "../../../platform/persistence/sessionReadRepository.ts";
 import {
   buildChartAxis,

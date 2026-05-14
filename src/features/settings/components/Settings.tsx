@@ -15,6 +15,7 @@ import { useSettingsPageState } from "../hooks/useSettingsPageState";
 
 export default function Settings({
   onSettingsChanged,
+  onColorSchemeSaved,
   onDirtyChange,
   onToast,
   onRegisterSaveHandler,
@@ -31,6 +32,7 @@ export default function Settings({
     hasUnsavedChanges,
     handleCancel,
     handleSave,
+    handleSaveColorScheme,
     handleChange,
     cleanupRange,
     setCleanupRange,
@@ -49,6 +51,7 @@ export default function Settings({
     minSessionMinutesRange,
   } = useSettingsPageState({
     onSettingsChanged,
+    onColorSchemeSaved,
     onDirtyChange,
     onToast,
     onRegisterSaveHandler,
@@ -172,7 +175,7 @@ export default function Settings({
             onColorSchemeLightChange={(nextColorScheme) => handleChange("colorSchemeLight", nextColorScheme)}
             colorSchemeDark={draftSettings.colorSchemeDark}
             onColorSchemeDarkChange={(nextColorScheme) => handleChange("colorSchemeDark", nextColorScheme)}
-            onConfirmColorSchemeChange={handleSave}
+            onConfirmColorSchemeChange={handleSaveColorScheme}
             colorSchemeConfirming={saveStatus === "saving"}
           />
 

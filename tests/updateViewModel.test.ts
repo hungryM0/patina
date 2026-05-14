@@ -75,12 +75,20 @@ runTest("check error falls back to release page", () => {
   const panel = buildUpdateStatusPanelModel(makeSnapshot({
     status: "error",
     errorStage: "check",
-    errorMessage: "failed to check updates: network offline",
+    errorMessage: "failed to check updates: error sending request for url (https://github.com/Ceceliaee/time-tracking/releases/latest/download/latest.json)",
   }), false, false);
 
   assert.equal(panel.statusTitle, "无法检查更新");
+  assert.equal(panel.statusDetail, "无法访问更新清单。当前网络可能无法连接 GitHub，你可以稍后重试，或手动下载。");
+  assert.equal(panel.statusDetail?.includes("failed to check updates"), false);
+  assert.equal(panel.statusDetail?.includes("github.com"), false);
   assert.equal(panel.primaryAction.action, "open_release_page");
   assert.equal(panel.secondaryAction?.action, "check");
+  assert.equal(shouldShowSidebarUpdateEntry(makeSnapshot({
+    status: "error",
+    errorStage: "check",
+    errorMessage: "failed to check updates: network offline",
+  })), false);
 });
 
 runTest("checking uses disabled loading action", () => {
@@ -180,22 +188,25 @@ runTest("confirm dialog shows manual fallback actions for download errors", () =
   }));
 
   assert.equal(model.title, "下载更新失败");
+  assert.equal(model.confirmDescription.includes("failed to download update"), false);
   assert.equal(model.primaryAction?.action, "open_download_url");
   assert.equal(model.secondaryAction?.action, "check");
 });
 
 runTest("install error keeps retry install as primary action", () => {
-  const panel = buildUpdateStatusPanelModel(makeSnapshot({
+  const snapshot = makeSnapshot({
     status: "error",
     errorStage: "install",
     errorMessage: "failed to install update",
     latestVersion: "0.2.3",
     assetDownloadUrl: "https://example.com/update.exe",
-  }), false, false);
+  });
+  const panel = buildUpdateStatusPanelModel(snapshot, false, false);
 
   assert.equal(panel.primaryAction.action, "open_confirm");
   assert.equal(panel.primaryAction.label, "再次安装");
   assert.equal(panel.secondaryAction?.action, "open_download_url");
+  assert.equal(shouldShowSidebarUpdateEntry(snapshot), false);
 });
 
 console.log(`Passed ${passed} update view model tests`);

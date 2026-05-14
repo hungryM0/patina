@@ -1,4 +1,4 @@
-import type { HistorySession } from "../../src/shared/lib/sessionReadRepository.ts";
+import type { HistorySession } from "../../src/shared/types/sessions.ts";
 import { resolveTrackerHealth } from "../../src/shared/types/tracking.ts";
 import { buildDashboardReadModel } from "../../src/features/dashboard/services/dashboardReadModel.ts";
 import { measureBenchmark, printBenchmarkReport } from "./benchmarkUtils.ts";

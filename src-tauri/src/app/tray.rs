@@ -114,7 +114,7 @@ pub(crate) fn handle_window_event<R: Runtime>(window: &Window<R>, event: &Window
     if window.label() == widget::WIDGET_WINDOW_LABEL {
         if let WindowEvent::CloseRequested { api, .. } = event {
             api.prevent_close();
-            show_main_window(&window.app_handle());
+            show_main_window(window.app_handle());
         }
         return;
     }
@@ -126,7 +126,7 @@ pub(crate) fn handle_window_event<R: Runtime>(window: &Window<R>, event: &Window
     let app = window.app_handle();
 
     if matches!(event, WindowEvent::Focused(true)) && window.is_visible().unwrap_or(false) {
-        widget::close_widget_window(&app);
+        widget::close_widget_window(app);
         return;
     }
 
@@ -137,7 +137,7 @@ pub(crate) fn handle_window_event<R: Runtime>(window: &Window<R>, event: &Window
     if let WindowEvent::CloseRequested { api, .. } = event {
         if should_redirect_close_to_tray(settings, exit_requested) {
             api.prevent_close();
-            widget::close_widget_window(&app);
+            widget::close_widget_window(app);
             let _ = window.hide();
         }
         return;
@@ -147,19 +147,15 @@ pub(crate) fn handle_window_event<R: Runtime>(window: &Window<R>, event: &Window
         return;
     }
 
-    match settings.minimize_behavior {
-        MinimizeBehavior::Widget => {
-            let preferred_monitor = window.current_monitor().ok().flatten();
-            let _ = window.hide();
-            let app_handle = app.clone();
-            tauri::async_runtime::spawn(async move {
-                if let Err(error) = widget::show_widget_window(&app_handle, preferred_monitor).await
-                {
-                    eprintln!("[widget] failed to show widget window: {error}");
-                }
-            });
-        }
-        _ => {}
+    if settings.minimize_behavior == MinimizeBehavior::Widget {
+        let preferred_monitor = window.current_monitor().ok().flatten();
+        let _ = window.hide();
+        let app_handle = app.clone();
+        tauri::async_runtime::spawn(async move {
+            if let Err(error) = widget::show_widget_window(&app_handle, preferred_monitor).await {
+                eprintln!("[widget] failed to show widget window: {error}");
+            }
+        });
     }
 }
 

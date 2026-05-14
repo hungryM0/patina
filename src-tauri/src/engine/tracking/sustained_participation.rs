@@ -22,6 +22,20 @@ pub(super) struct SustainedParticipationRuntimeState {
     pub transient_miss_count: u8,
 }
 
+pub(super) struct SustainedParticipationStatusInput<'a> {
+    pub exe_name: &'a str,
+    pub process_path: &'a str,
+    pub idle_time_ms: u32,
+    pub is_afk: bool,
+    pub continuity_window_secs: u64,
+    pub sustained_participation_secs: u64,
+    pub tracking_paused: bool,
+    pub now_ms: i64,
+    pub previous_state: &'a SustainedParticipationRuntimeState,
+    pub system_media_signal: &'a SustainedParticipationSignalSnapshot,
+    pub audio_signal: &'a SustainedParticipationSignalSnapshot,
+}
+
 pub(super) fn apply_tracking_mode_window_state(
     mut tracked_window: tracker::WindowInfo,
     tracking_status: &TrackingStatusSnapshot,
@@ -58,18 +72,22 @@ pub(super) async fn load_sustained_participation_signals(
 }
 
 pub(super) fn resolve_tracking_status_with_runtime(
-    exe_name: &str,
-    process_path: &str,
-    idle_time_ms: u32,
-    is_afk: bool,
-    continuity_window_secs: u64,
-    sustained_participation_secs: u64,
-    tracking_paused: bool,
-    now_ms: i64,
-    previous_state: &SustainedParticipationRuntimeState,
-    system_media_signal: &SustainedParticipationSignalSnapshot,
-    audio_signal: &SustainedParticipationSignalSnapshot,
+    input: SustainedParticipationStatusInput<'_>,
 ) -> (TrackingStatusSnapshot, SustainedParticipationRuntimeState) {
+    let SustainedParticipationStatusInput {
+        exe_name,
+        process_path,
+        idle_time_ms,
+        is_afk,
+        continuity_window_secs,
+        sustained_participation_secs,
+        tracking_paused,
+        now_ms,
+        previous_state,
+        system_media_signal,
+        audio_signal,
+    } = input;
+
     let continuity_active = !is_afk && u64::from(idle_time_ms) <= continuity_window_secs * 1000;
     let window_identity = sustained_participation_app_identity(exe_name, process_path);
     let system_media =
@@ -295,16 +313,13 @@ fn select_matched_signal<'a>(
     system_media: &'a SustainedParticipationSignalEvaluationSnapshot,
     audio_session: &'a SustainedParticipationSignalEvaluationSnapshot,
 ) -> Option<&'a SustainedParticipationSignalEvaluationSnapshot> {
-    for evaluation in [system_media, audio_session] {
-        if evaluation.match_result == SustainedParticipationSignalMatchResult::Matched
-            && resolve_sustained_participation_kind(exe_name, process_path, &evaluation.signal)
-                .is_some()
-        {
-            return Some(evaluation);
-        }
-    }
-
-    None
+    [system_media, audio_session]
+        .into_iter()
+        .find(|evaluation| {
+            evaluation.match_result == SustainedParticipationSignalMatchResult::Matched
+                && resolve_sustained_participation_kind(exe_name, process_path, &evaluation.signal)
+                    .is_some()
+        })
 }
 
 fn resolve_grace_window_ms() -> i64 {
@@ -384,6 +399,35 @@ mod tests {
         window
     }
 
+    #[allow(clippy::too_many_arguments)]
+    fn resolve_status_for_test(
+        exe_name: &str,
+        process_path: &str,
+        idle_time_ms: u32,
+        is_afk: bool,
+        continuity_window_secs: u64,
+        sustained_participation_secs: u64,
+        tracking_paused: bool,
+        now_ms: i64,
+        previous_state: &SustainedParticipationRuntimeState,
+        system_media_signal: &SustainedParticipationSignalSnapshot,
+        audio_signal: &SustainedParticipationSignalSnapshot,
+    ) -> (TrackingStatusSnapshot, SustainedParticipationRuntimeState) {
+        resolve_tracking_status_with_runtime(SustainedParticipationStatusInput {
+            exe_name,
+            process_path,
+            idle_time_ms,
+            is_afk,
+            continuity_window_secs,
+            sustained_participation_secs,
+            tracking_paused,
+            now_ms,
+            previous_state,
+            system_media_signal,
+            audio_signal,
+        })
+    }
+
     #[test]
     fn sustained_participation_masks_generic_afk_before_sustained_timeout() {
         let current = make_window(&[
@@ -415,7 +459,7 @@ mod tests {
             ..SustainedParticipationRuntimeState::default()
         };
 
-        let (status, next_state) = resolve_tracking_status_with_runtime(
+        let (status, next_state) = resolve_status_for_test(
             "Zoom.exe",
             r"C:\Program Files\Zoom\Zoom.exe",
             240_000,
@@ -455,7 +499,7 @@ mod tests {
             ..SustainedParticipationRuntimeState::default()
         };
 
-        let (status, next_state) = resolve_tracking_status_with_runtime(
+        let (status, next_state) = resolve_status_for_test(
             "Zoom.exe",
             r"C:\Program Files\Zoom\Zoom.exe",
             240_000,
@@ -490,7 +534,7 @@ mod tests {
             ..SustainedParticipationRuntimeState::default()
         };
 
-        let (status, _) = resolve_tracking_status_with_runtime(
+        let (status, _) = resolve_status_for_test(
             "Zoom.exe",
             r"C:\Program Files\Zoom\Zoom.exe",
             240_000,
@@ -533,7 +577,7 @@ mod tests {
             playback_type: Some(crate::domain::tracking::SystemMediaPlaybackType::Video),
         };
 
-        let (status, next_state) = resolve_tracking_status_with_runtime(
+        let (status, next_state) = resolve_status_for_test(
             "Zoom.exe",
             r"C:\Program Files\Zoom\Zoom.exe",
             240_000,
@@ -567,7 +611,7 @@ mod tests {
             playback_type: Some(crate::domain::tracking::SystemMediaPlaybackType::Video),
         };
 
-        let (status, _) = resolve_tracking_status_with_runtime(
+        let (status, _) = resolve_status_for_test(
             "Zoom.exe",
             r"C:\Program Files\Zoom\Zoom.exe",
             1_000,
@@ -613,7 +657,7 @@ mod tests {
             playback_type: None,
         };
 
-        let (status, _) = resolve_tracking_status_with_runtime(
+        let (status, _) = resolve_status_for_test(
             "Zoom.exe",
             r"C:\Program Files\Zoom\Zoom.exe",
             240_000,
@@ -659,7 +703,7 @@ mod tests {
             playback_type: None,
         };
 
-        let (status, _) = resolve_tracking_status_with_runtime(
+        let (status, _) = resolve_status_for_test(
             "Chrome.exe",
             r"C:\Program Files\Google\Chrome\Application\chrome.exe",
             240_000,
@@ -692,7 +736,7 @@ mod tests {
             ..SustainedParticipationRuntimeState::default()
         };
 
-        let (status, next_state) = resolve_tracking_status_with_runtime(
+        let (status, next_state) = resolve_status_for_test(
             "Chrome.exe",
             r"C:\Program Files\Google\Chrome\Application\chrome.exe",
             240_000,

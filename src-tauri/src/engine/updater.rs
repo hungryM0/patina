@@ -11,6 +11,7 @@ use crate::domain::update::{UpdateErrorStage, UpdateSnapshot, UpdateStatus};
 const STARTUP_AUTO_CHECK_DELAYS_MS: [u64; 3] = [3_500, 15_000, 60_000];
 const UPDATE_SNAPSHOT_CHANGED_EVENT: &str = "update-snapshot-changed";
 const RELEASES_BASE_URL: &str = "https://github.com/Ceceliaee/time-tracking/releases";
+const LATEST_RELEASE_URL: &str = "https://github.com/Ceceliaee/time-tracking/releases/latest";
 
 #[derive(Clone)]
 pub struct UpdaterRuntimeState {
@@ -28,7 +29,7 @@ impl UpdaterRuntimeState {
         Self {
             inner: Arc::new(Mutex::new(UpdaterStateInner {
                 snapshot: UpdateSnapshot::idle(current_version)
-                    .with_fallback_urls(Some(RELEASES_BASE_URL.to_string()), None),
+                    .with_fallback_urls(Some(latest_release_page_url()), None),
                 pending_update: None,
                 downloaded_bytes: None,
             })),
@@ -71,7 +72,7 @@ impl UpdaterRuntimeState {
                 .snapshot
                 .clone()
                 .up_to_date()
-                .with_fallback_urls(Some(root_release_page_url()), None);
+                .with_fallback_urls(Some(latest_release_page_url()), None);
             inner.pending_update = None;
             inner.downloaded_bytes = None;
             inner.snapshot.clone()
@@ -152,13 +153,13 @@ impl UpdaterRuntimeState {
     }
 }
 
-fn root_release_page_url() -> String {
-    RELEASES_BASE_URL.to_string()
+fn latest_release_page_url() -> String {
+    LATEST_RELEASE_URL.to_string()
 }
 
 fn release_page_url_for_version(version: &str) -> Option<String> {
     if version.trim().is_empty() {
-        return Some(root_release_page_url());
+        return Some(latest_release_page_url());
     }
 
     Some(format!("{RELEASES_BASE_URL}/tag/v{version}"))

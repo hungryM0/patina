@@ -96,12 +96,12 @@ unsafe fn query_window_icon_handle(hwnd: HWND) -> Option<HICON> {
         }
     }
 
-    let class_icon = GetClassLongPtrW(hwnd, GCLP_HICON) as usize;
+    let class_icon = GetClassLongPtrW(hwnd, GCLP_HICON);
     if class_icon != 0 {
         return Some(HICON(class_icon as *mut core::ffi::c_void));
     }
 
-    let class_small_icon = GetClassLongPtrW(hwnd, GCLP_HICONSM) as usize;
+    let class_small_icon = GetClassLongPtrW(hwnd, GCLP_HICONSM);
     if class_small_icon != 0 {
         return Some(HICON(class_small_icon as *mut core::ffi::c_void));
     }
@@ -129,7 +129,7 @@ unsafe fn hicon_to_base64(hicon: HICON) -> Option<String> {
     }
 
     let width = bm.bmWidth as u32;
-    let height = bm.bmHeight.abs() as u32;
+    let height = bm.bmHeight.unsigned_abs();
     if width == 0 || height == 0 {
         let _ = DeleteObject(icon_info.hbmColor.into());
         let _ = DeleteObject(icon_info.hbmMask.into());

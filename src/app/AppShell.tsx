@@ -218,6 +218,10 @@ function AppShellContent() {
                     setSettingsColorSchemePreview(null);
                     setSettingsLanguagePreview(null);
                   }}
+                  onColorSchemeSaved={(nextSettings) => {
+                    setAppSettings(nextSettings);
+                    setSettingsColorSchemePreview(null);
+                  }}
                   onRegisterSaveHandler={registerSettingsSaveHandler}
                   onDirtyChange={setSettingsDirty}
                   onThemeModePreview={setSettingsThemeModePreview}

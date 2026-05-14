@@ -1,18 +1,17 @@
 use super::transition;
-use crate::data::repositories::sessions;
+use crate::data::tracking_runtime::{TrackingRuntimeDataError, TrackingRuntimeDataStore};
 use crate::domain::tracking::{
     SustainedParticipationState, TrackingStatusSnapshot, WindowSessionIdentity,
     TRACKING_REASON_CONTINUITY_WINDOW_SEALED, TRACKING_REASON_PASSIVE_PARTICIPATION_SEALED,
     TRACKING_REASON_TRACKING_PAUSED_SEALED,
 };
 use crate::platform::windows::foreground as tracker;
-use sqlx::{Pool, Sqlite};
 
 pub(super) async fn seal_active_sessions_for_tracking_pause(
-    pool: &Pool<Sqlite>,
+    data: &TrackingRuntimeDataStore,
     timestamp_ms: i64,
-) -> Result<Option<&'static str>, sqlx::Error> {
-    if sessions::end_active_sessions(pool, timestamp_ms).await? {
+) -> Result<Option<&'static str>, TrackingRuntimeDataError> {
+    if data.end_active_sessions(timestamp_ms).await? {
         return Ok(Some(TRACKING_REASON_TRACKING_PAUSED_SEALED));
     }
 
@@ -20,11 +19,11 @@ pub(super) async fn seal_active_sessions_for_tracking_pause(
 }
 
 pub(super) async fn seal_active_sessions_for_continuity_timeout(
-    pool: &Pool<Sqlite>,
+    data: &TrackingRuntimeDataStore,
     window: &tracker::WindowInfo,
     now_ms: i64,
     continuity_window_secs: u64,
-) -> Result<Option<&'static str>, sqlx::Error> {
+) -> Result<Option<&'static str>, TrackingRuntimeDataError> {
     if !has_exceeded_continuity_window(window, continuity_window_secs) {
         return Ok(None);
     }
@@ -32,7 +31,7 @@ pub(super) async fn seal_active_sessions_for_continuity_timeout(
     let resolved_end_time =
         resolve_continuity_window_end_time(now_ms, window.idle_time_ms, continuity_window_secs);
 
-    if sessions::end_active_sessions(pool, resolved_end_time).await? {
+    if data.end_active_sessions(resolved_end_time).await? {
         return Ok(Some(TRACKING_REASON_CONTINUITY_WINDOW_SEALED));
     }
 
@@ -40,11 +39,11 @@ pub(super) async fn seal_active_sessions_for_continuity_timeout(
 }
 
 pub(super) async fn seal_active_sessions_for_passive_participation_timeout(
-    pool: &Pool<Sqlite>,
+    data: &TrackingRuntimeDataStore,
     window: &tracker::WindowInfo,
     now_ms: i64,
     sustained_participation_secs: u64,
-) -> Result<Option<&'static str>, sqlx::Error> {
+) -> Result<Option<&'static str>, TrackingRuntimeDataError> {
     if !has_exceeded_sustained_participation_window(window, sustained_participation_secs) {
         return Ok(None);
     }
@@ -55,7 +54,7 @@ pub(super) async fn seal_active_sessions_for_passive_participation_timeout(
         sustained_participation_secs,
     );
 
-    if sessions::end_active_sessions(pool, resolved_end_time).await? {
+    if data.end_active_sessions(resolved_end_time).await? {
         return Ok(Some(TRACKING_REASON_PASSIVE_PARTICIPATION_SEALED));
     }
 
@@ -175,6 +174,7 @@ fn sustained_participation_window_ms(sustained_participation_secs: u64) -> i64 {
 mod tests {
     use super::*;
     use crate::data::migrations as db_schema;
+    use crate::data::tracking_runtime::TrackingRuntimeDataStore;
     use crate::domain::tracking::SustainedParticipationStatusReason;
     use crate::engine::tracking::active_session;
     use sqlx::{Executor, SqlitePool};
@@ -222,6 +222,10 @@ mod tests {
         pool
     }
 
+    fn data_store(pool: &SqlitePool) -> TrackingRuntimeDataStore {
+        TrackingRuntimeDataStore::new(pool.clone())
+    }
+
     #[test]
     fn continuity_timeout_seals_active_session_at_continuity_boundary() {
         tauri::async_runtime::block_on(async {
@@ -234,7 +238,8 @@ mod tests {
                     .unwrap()
             );
 
-            let reason = seal_active_sessions_for_continuity_timeout(&pool, &window, 400_000, 180)
+            let data = data_store(&pool);
+            let reason = seal_active_sessions_for_continuity_timeout(&data, &window, 400_000, 180)
                 .await
                 .unwrap();
 
@@ -262,12 +267,13 @@ mod tests {
                 .await
                 .unwrap());
 
+            let data = data_store(&pool);
             let seal_reason =
-                seal_active_sessions_for_continuity_timeout(&pool, &timed_out, 300_000, 180)
+                seal_active_sessions_for_continuity_timeout(&data, &timed_out, 300_000, 180)
                     .await
                     .unwrap();
             let recover_reason = transition::apply_window_transition(
-                &pool,
+                &data,
                 Some(&timed_out),
                 &resumed,
                 301_000,
@@ -347,8 +353,9 @@ mod tests {
                 &expired_status,
             ));
 
+            let data = data_store(&pool);
             let reason = seal_active_sessions_for_passive_participation_timeout(
-                &pool, &timed_out, 700_000, 600,
+                &data, &timed_out, 700_000, 600,
             )
             .await
             .unwrap();

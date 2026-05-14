@@ -1,4 +1,4 @@
-import type { HistorySession } from "../../src/shared/lib/sessionReadRepository.ts";
+import type { HistorySession } from "../../src/shared/types/sessions.ts";
 import type { TrackedWindow } from "../../src/shared/types/tracking.ts";
 
 export function makeWindow(overrides: Partial<TrackedWindow> = {}): TrackedWindow {

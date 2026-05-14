@@ -1,9 +1,9 @@
 import type { AppStat } from "../../../shared/types/app.ts";
+import type { HistorySession } from "../../../shared/types/sessions.ts";
 import type { TrackerHealthSnapshot } from "../../../shared/types/tracking.ts";
 import {
   getHistoryByDate,
   getIconMap,
-  type HistorySession,
 } from "../../../platform/persistence/sessionReadRepository.ts";
 import {
   buildCategoryDistribution,

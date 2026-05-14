@@ -311,16 +311,30 @@ pub fn resolve_sustained_participation_identity_key(
 }
 
 #[allow(dead_code)]
-pub fn resolve_tracking_status(
-    exe_name: &str,
-    process_path: &str,
-    idle_time_ms: u32,
-    is_afk: bool,
-    continuity_window_secs: u64,
-    sustained_participation_secs: u64,
-    tracking_paused: bool,
-    signal: &SustainedParticipationSignalSnapshot,
-) -> TrackingStatusSnapshot {
+pub struct TrackingStatusResolutionInput<'a> {
+    pub exe_name: &'a str,
+    pub process_path: &'a str,
+    pub idle_time_ms: u32,
+    pub is_afk: bool,
+    pub continuity_window_secs: u64,
+    pub sustained_participation_secs: u64,
+    pub tracking_paused: bool,
+    pub signal: &'a SustainedParticipationSignalSnapshot,
+}
+
+#[allow(dead_code)]
+pub fn resolve_tracking_status(input: TrackingStatusResolutionInput<'_>) -> TrackingStatusSnapshot {
+    let TrackingStatusResolutionInput {
+        exe_name,
+        process_path,
+        idle_time_ms,
+        is_afk,
+        continuity_window_secs,
+        sustained_participation_secs,
+        tracking_paused,
+        signal,
+    } = input;
+
     if tracking_paused || exe_name.trim().is_empty() {
         return TrackingStatusSnapshot::default();
     }
@@ -674,8 +688,8 @@ mod tests {
         sustained_participation_app_identity, SustainedParticipationAppIdentity,
         SustainedParticipationKind, SustainedParticipationSignalSnapshot,
         SustainedParticipationSignalSource, SystemMediaPlaybackType, TrackingDataChangedPayload,
-        WindowSessionIdentity, WindowTrackingCandidate, WindowTransitionDecision,
-        TRACKING_REASON_STARTUP_SEALED, TRACKING_REASON_STATUS_CHANGED,
+        TrackingStatusResolutionInput, WindowSessionIdentity, WindowTrackingCandidate,
+        WindowTransitionDecision, TRACKING_REASON_STARTUP_SEALED, TRACKING_REASON_STATUS_CHANGED,
         TRACKING_REASON_TRACKING_PAUSED_SEALED, TRACKING_REASON_WATCHDOG_SEALED,
     };
 
@@ -905,16 +919,16 @@ mod tests {
             playback_type: Some(SystemMediaPlaybackType::Video),
         };
 
-        let status = resolve_tracking_status(
-            "chrome.exe",
-            r"C:\Program Files\Google\Chrome\Application\chrome.exe",
-            500_000,
-            false,
-            180,
-            600,
-            false,
-            &signal,
-        );
+        let status = resolve_tracking_status(TrackingStatusResolutionInput {
+            exe_name: "chrome.exe",
+            process_path: r"C:\Program Files\Google\Chrome\Application\chrome.exe",
+            idle_time_ms: 500_000,
+            is_afk: false,
+            continuity_window_secs: 180,
+            sustained_participation_secs: 600,
+            tracking_paused: false,
+            signal: &signal,
+        });
 
         assert!(status.is_tracking_active);
         assert!(status.sustained_participation_eligible);
@@ -929,16 +943,16 @@ mod tests {
     fn tracking_status_falls_back_to_continuity_without_signal() {
         let signal = SustainedParticipationSignalSnapshot::default();
 
-        let status = resolve_tracking_status(
-            "zoom.exe",
-            r"C:\Program Files\Zoom\Zoom.exe",
-            250_000,
-            false,
-            180,
-            600,
-            false,
-            &signal,
-        );
+        let status = resolve_tracking_status(TrackingStatusResolutionInput {
+            exe_name: "zoom.exe",
+            process_path: r"C:\Program Files\Zoom\Zoom.exe",
+            idle_time_ms: 250_000,
+            is_afk: false,
+            continuity_window_secs: 180,
+            sustained_participation_secs: 600,
+            tracking_paused: false,
+            signal: &signal,
+        });
 
         assert!(!status.is_tracking_active);
         assert!(!status.sustained_participation_eligible);
@@ -957,16 +971,16 @@ mod tests {
             playback_type: None,
         };
 
-        let status = resolve_tracking_status(
-            "PotPlayerMini64.exe",
-            r"C:\Program Files\DAUM\PotPlayer\PotPlayerMini64.exe",
-            240_000,
-            false,
-            180,
-            600,
-            false,
-            &signal,
-        );
+        let status = resolve_tracking_status(TrackingStatusResolutionInput {
+            exe_name: "PotPlayerMini64.exe",
+            process_path: r"C:\Program Files\DAUM\PotPlayer\PotPlayerMini64.exe",
+            idle_time_ms: 240_000,
+            is_afk: false,
+            continuity_window_secs: 180,
+            sustained_participation_secs: 600,
+            tracking_paused: false,
+            signal: &signal,
+        });
 
         assert!(status.is_tracking_active);
         assert!(status.sustained_participation_eligible);
@@ -988,16 +1002,16 @@ mod tests {
             playback_type: None,
         };
 
-        let status = resolve_tracking_status(
-            "Chrome.exe",
-            r"C:\Program Files\Google\Chrome\Application\chrome.exe",
-            240_000,
-            true,
-            180,
-            900,
-            false,
-            &signal,
-        );
+        let status = resolve_tracking_status(TrackingStatusResolutionInput {
+            exe_name: "Chrome.exe",
+            process_path: r"C:\Program Files\Google\Chrome\Application\chrome.exe",
+            idle_time_ms: 240_000,
+            is_afk: true,
+            continuity_window_secs: 180,
+            sustained_participation_secs: 900,
+            tracking_paused: false,
+            signal: &signal,
+        });
 
         assert!(status.sustained_participation_active);
         assert_eq!(
@@ -1017,16 +1031,16 @@ mod tests {
             playback_type: Some(SystemMediaPlaybackType::Video),
         };
 
-        let status = resolve_tracking_status(
-            "zoom.exe",
-            r"C:\Program Files\Zoom\Zoom.exe",
-            240_000,
-            true,
-            180,
-            900,
-            false,
-            &signal,
-        );
+        let status = resolve_tracking_status(TrackingStatusResolutionInput {
+            exe_name: "zoom.exe",
+            process_path: r"C:\Program Files\Zoom\Zoom.exe",
+            idle_time_ms: 240_000,
+            is_afk: true,
+            continuity_window_secs: 180,
+            sustained_participation_secs: 900,
+            tracking_paused: false,
+            signal: &signal,
+        });
 
         assert!(status.is_tracking_active);
         assert!(status.sustained_participation_eligible);

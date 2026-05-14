@@ -186,12 +186,15 @@
 
 默认最低门槛：
 
-- `npm test`
-- `npm run test:replay`
-- `npm run test:update`
-- `npm run build`
+- `npm run check`
 
-如果改动还涉及 Rust 侧关键路径，应补上对应的 Rust 检查或回归验证。
+它会串联当前前端边界检查、关键测试、构建与 bundle 预算。局部修复可以先运行命中的专项测试，但交付前应按风险回到默认门槛。
+
+如果涉及架构边界、Rust 核心路径或发布前复核，应运行：
+
+- `npm run check:full`
+
+如果涉及版本号、changelog、updater artifact 或发布脚本，还应补充当前发布校验脚本。
 
 ---
 

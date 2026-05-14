@@ -1,33 +1,33 @@
-use crate::data::repositories::{sessions, tracker_settings};
+use crate::data::tracking_runtime::{TrackingRuntimeDataError, TrackingRuntimeDataStore};
 use crate::domain::tracking::{TrackingDataChangedPayload, TRACKING_REASON_STARTUP_SEALED};
 use crate::platform::windows::foreground as tracker;
-use sqlx::{Pool, Sqlite};
 use tauri::{AppHandle, Emitter, Runtime};
 
 const DEFAULT_AFK_THRESHOLD_SECS: u64 = 180;
 
 pub async fn initialize_tracker<R: Runtime>(
     app: &AppHandle<R>,
-    pool: &Pool<Sqlite>,
-) -> Result<(), sqlx::Error> {
-    let afk_threshold_secs =
-        tracker_settings::load_timeline_merge_gap_secs(pool, DEFAULT_AFK_THRESHOLD_SECS).await?;
+    data: &TrackingRuntimeDataStore,
+) -> Result<(), TrackingRuntimeDataError> {
+    let afk_threshold_secs = data
+        .load_timeline_merge_gap_secs(DEFAULT_AFK_THRESHOLD_SECS)
+        .await?;
     tracker::cmd_set_afk_threshold(afk_threshold_secs);
 
     let mut repair_notes: Vec<String> = Vec::new();
 
-    record_normalized_closed_duration(pool, &mut repair_notes).await?;
-    seal_startup_active_session_if_needed(app, pool, &mut repair_notes).await?;
-    persist_startup_self_heal_if_needed(pool, &repair_notes).await?;
+    record_normalized_closed_duration(data, &mut repair_notes).await?;
+    seal_startup_active_session_if_needed(app, data, &mut repair_notes).await?;
+    persist_startup_self_heal_if_needed(data, &repair_notes).await?;
 
     Ok(())
 }
 
 async fn record_normalized_closed_duration(
-    pool: &Pool<Sqlite>,
+    data: &TrackingRuntimeDataStore,
     repair_notes: &mut Vec<String>,
-) -> Result<(), sqlx::Error> {
-    let normalized_rows = sessions::normalize_closed_session_durations(pool).await?;
+) -> Result<(), TrackingRuntimeDataError> {
+    let normalized_rows = data.normalize_closed_session_durations().await?;
     if normalized_rows > 0 {
         repair_notes.push(format!("normalized_closed_duration={normalized_rows}"));
     }
@@ -37,10 +37,10 @@ async fn record_normalized_closed_duration(
 
 async fn seal_startup_active_session_if_needed<R: Runtime>(
     app: &AppHandle<R>,
-    pool: &Pool<Sqlite>,
+    data: &TrackingRuntimeDataStore,
     repair_notes: &mut Vec<String>,
-) -> Result<(), sqlx::Error> {
-    if let Some(end_time) = seal_startup_active_session_in_pool(pool, now_ms()).await? {
+) -> Result<(), TrackingRuntimeDataError> {
+    if let Some(end_time) = seal_startup_active_session(data, now_ms()).await? {
         repair_notes.push("sealed_active_session".to_string());
         let _ = emit_tracking_data_changed(app, TRACKING_REASON_STARTUP_SEALED, end_time as u64);
     }
@@ -48,23 +48,19 @@ async fn seal_startup_active_session_if_needed<R: Runtime>(
     Ok(())
 }
 
-pub(crate) async fn seal_startup_active_session_in_pool(
-    pool: &Pool<Sqlite>,
+pub(crate) async fn seal_startup_active_session(
+    data: &TrackingRuntimeDataStore,
     now_ms: i64,
-) -> Result<Option<i64>, sqlx::Error> {
-    let Some(existing_session) = sessions::load_active_session(pool).await? else {
+) -> Result<Option<i64>, TrackingRuntimeDataError> {
+    let Some(existing_session) = data.load_active_session().await? else {
         return Ok(None);
     };
 
-    let last_heartbeat_ms = tracker_settings::load_tracker_timestamp(
-        pool,
-        tracker_settings::TRACKER_LAST_HEARTBEAT_KEY,
-    )
-    .await?;
+    let last_heartbeat_ms = data.load_tracker_heartbeat_timestamp().await?;
     let end_time =
         resolve_startup_seal_time(existing_session.start_time, last_heartbeat_ms, now_ms);
 
-    if sessions::end_active_sessions(pool, end_time).await? {
+    if data.end_active_sessions(end_time).await? {
         return Ok(Some(end_time));
     }
 
@@ -72,27 +68,16 @@ pub(crate) async fn seal_startup_active_session_in_pool(
 }
 
 async fn persist_startup_self_heal_if_needed(
-    pool: &Pool<Sqlite>,
+    data: &TrackingRuntimeDataStore,
     repair_notes: &[String],
-) -> Result<(), sqlx::Error> {
+) -> Result<(), TrackingRuntimeDataError> {
     if repair_notes.is_empty() {
         return Ok(());
     }
 
     let summary = repair_notes.join(",");
     let now = now_ms();
-    tracker_settings::save_setting_value(
-        pool,
-        tracker_settings::TRACKER_LAST_STARTUP_SELF_HEAL_AT_KEY,
-        &now.to_string(),
-    )
-    .await?;
-    tracker_settings::save_setting_value(
-        pool,
-        tracker_settings::TRACKER_LAST_STARTUP_SELF_HEAL_SUMMARY_KEY,
-        &summary,
-    )
-    .await?;
+    data.save_startup_self_heal(now, &summary).await?;
     log_startup_error(format!("startup self-heal applied: {summary}"));
 
     Ok(())
@@ -134,9 +119,10 @@ fn log_startup_error(message: impl AsRef<str>) {
 
 #[cfg(test)]
 mod tests {
-    use super::{resolve_startup_seal_time, seal_startup_active_session_in_pool};
+    use super::{resolve_startup_seal_time, seal_startup_active_session};
     use crate::data::migrations as db_schema;
     use crate::data::repositories::{sessions, tracker_settings};
+    use crate::data::tracking_runtime::TrackingRuntimeDataStore;
     use sqlx::{Executor, SqlitePool};
 
     async fn setup_test_db() -> SqlitePool {
@@ -149,6 +135,10 @@ mod tests {
         pool.execute(db_schema::MIGRATION_6_SQL).await.unwrap();
         pool.execute(db_schema::MIGRATION_7_SQL).await.unwrap();
         pool
+    }
+
+    fn data_store(pool: &SqlitePool) -> TrackingRuntimeDataStore {
+        TrackingRuntimeDataStore::new(pool.clone())
     }
 
     #[test]
@@ -177,9 +167,8 @@ mod tests {
             .await
             .unwrap();
 
-            let end_time = seal_startup_active_session_in_pool(&pool, 20_000)
-                .await
-                .unwrap();
+            let data = data_store(&pool);
+            let end_time = seal_startup_active_session(&data, 20_000).await.unwrap();
             let ended: Option<(i64, i64)> = sqlx::query_as(
                 "SELECT end_time, duration FROM sessions WHERE end_time IS NOT NULL LIMIT 1",
             )
@@ -209,9 +198,8 @@ mod tests {
             .await
             .unwrap();
 
-            let end_time = seal_startup_active_session_in_pool(&pool, 20_000)
-                .await
-                .unwrap();
+            let data = data_store(&pool);
+            let end_time = seal_startup_active_session(&data, 20_000).await.unwrap();
             let ended_sessions: Vec<(i64, i64)> = sqlx::query_as(
                 "SELECT end_time, duration FROM sessions WHERE end_time IS NOT NULL",
             )

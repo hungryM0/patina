@@ -1,5 +1,6 @@
 import { getDB } from "./sqlite.ts";
 import { AppClassification } from "../../shared/classification/appClassification.ts";
+import type { HistorySession } from "../../shared/types/sessions.ts";
 
 interface RawHistorySessionRow {
   id: number;
@@ -10,22 +11,6 @@ interface RawHistorySessionRow {
   end_time: number | null;
   duration: number | null;
   continuity_group_start_time: number | null;
-}
-
-export interface HistorySession {
-  id: number;
-  appName: string;
-  exeName: string;
-  windowTitle: string;
-  startTime: number;
-  endTime: number | null;
-  duration: number | null;
-  continuityGroupStartTime: number | null;
-}
-
-export interface DailySummary {
-  date: string;
-  totalDuration: number;
 }
 
 function mapRawHistorySession(row: RawHistorySessionRow): HistorySession {

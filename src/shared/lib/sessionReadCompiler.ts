@@ -1,5 +1,5 @@
 import type { AppStat } from "../types/app";
-import type { DailySummary, HistorySession } from "./sessionReadRepository";
+import type { DailySummary, HistorySession } from "../types/sessions";
 import { AppClassification } from "../classification/appClassification.ts";
 import { cleanWindowTitle } from "./windowTitleCleaner.ts";
 

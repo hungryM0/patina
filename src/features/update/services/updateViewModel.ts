@@ -51,7 +51,10 @@ export function shouldOpenUpdateDialogForSnapshot(snapshot: UpdateSnapshot): boo
 }
 
 export function shouldShowSidebarUpdateEntry(snapshot: UpdateSnapshot): boolean {
-  return shouldOpenUpdateDialogForSnapshot(snapshot);
+  return snapshot.status === "available"
+    || snapshot.status === "downloaded"
+    || snapshot.status === "downloading"
+    || snapshot.status === "installing";
 }
 
 function formatVersion(value: string | null): string {
@@ -78,27 +81,14 @@ function formatByteCount(value: number): string {
   return `${next.toFixed(digits)} ${units[unitIndex]}`;
 }
 
-function summarizeErrorMessage(message: string | null): string | null {
-  if (!message) return null;
-  const trimmed = message.replace(/\s+/g, " ").trim();
-  if (!trimmed) return null;
-  return trimmed.length > 180 ? `${trimmed.slice(0, 180).trimEnd()}...` : trimmed;
-}
-
-function buildErrorDetail(
-  stage: UpdateErrorStage | null,
-  errorMessage: string | null,
-): string | null {
-  const summary = summarizeErrorMessage(errorMessage);
-  const prefix = stage === "check"
+function buildErrorDetail(stage: UpdateErrorStage | null): string {
+  return stage === "check"
     ? UI_TEXT.update.checkErrorDetail
     : stage === "download"
       ? UI_TEXT.update.downloadErrorDetail
       : stage === "install"
         ? UI_TEXT.update.installErrorDetail
         : UI_TEXT.update.genericErrorDetail;
-
-  return summary ? UI_TEXT.update.errorDetailWithSummary(prefix, summary) : prefix;
 }
 
 function buildUpdateProgressModel(snapshot: UpdateSnapshot): UpdateProgressModel | null {
@@ -320,7 +310,7 @@ export function buildUpdateStatusPanelModel(
           : snapshot.errorStage === "install"
             ? UI_TEXT.update.installFailed
             : UI_TEXT.update.updateFailed,
-      statusDetail: buildErrorDetail(snapshot.errorStage, snapshot.errorMessage),
+      statusDetail: buildErrorDetail(snapshot.errorStage),
       primaryAction,
       secondaryAction,
       progress,
@@ -371,8 +361,7 @@ export function buildUpdateConfirmDialogModel(snapshot: UpdateSnapshot): UpdateC
             ? UI_TEXT.update.installFailedDialog
             : UI_TEXT.update.updateFailedDialog,
       versionCompareLabel: `${currentVersion} -> ${latestVersion}`,
-      confirmDescription: buildErrorDetail(snapshot.errorStage, snapshot.errorMessage)
-        ?? UI_TEXT.update.updateProcessFailed,
+      confirmDescription: buildErrorDetail(snapshot.errorStage),
       notesPreview: getReleaseNotesPreview(snapshot.releaseNotes),
       progress: buildUpdateProgressModel(snapshot),
       primaryAction,

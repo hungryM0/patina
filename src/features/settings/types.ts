@@ -9,6 +9,7 @@ export interface ColorSchemePreview {
 
 export interface SettingsPageProps {
   onSettingsChanged: (settings: AppSettings) => void;
+  onColorSchemeSaved?: (settings: AppSettings) => void;
   onCheckForUpdates?: () => Promise<void>;
   onOpenUpdateDialog?: () => void;
   onOpenUpdateReleasePage?: () => Promise<void>;

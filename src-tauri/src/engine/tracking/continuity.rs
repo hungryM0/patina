@@ -1,8 +1,7 @@
 use super::transition;
-use crate::data::repositories::sessions;
+use crate::data::tracking_runtime::TrackingRuntimeDataStore;
 use crate::domain::tracking::TrackingStatusSnapshot;
 use crate::platform::windows::foreground as tracker;
-use sqlx::{Pool, Sqlite};
 
 #[derive(Clone, Debug)]
 pub(crate) struct PendingContinuity {
@@ -12,7 +11,7 @@ pub(crate) struct PendingContinuity {
 }
 
 pub(crate) async fn load_pending_continuity(
-    pool: &Pool<Sqlite>,
+    data: &TrackingRuntimeDataStore,
     previous_window: Option<&tracker::WindowInfo>,
     previous_tracking_status: Option<&TrackingStatusSnapshot>,
     current_window: &tracker::WindowInfo,
@@ -24,7 +23,7 @@ pub(crate) async fn load_pending_continuity(
     }
 
     let previous_identity = transition::resolve_window_session_identity(previous_window)?;
-    let active_session = sessions::load_active_session(pool).await.ok().flatten()?;
+    let active_session = data.load_active_session().await.ok().flatten()?;
 
     Some(PendingContinuity {
         app_key: previous_identity.app_key,
@@ -124,6 +123,7 @@ mod tests {
         resolve_next_session_continuity_group_start_time,
     };
     use crate::data::migrations as db_schema;
+    use crate::data::tracking_runtime::TrackingRuntimeDataStore;
     use crate::domain::tracking::{SustainedParticipationKind, TrackingStatusSnapshot};
     use crate::engine::tracking::{active_session, transition};
     use crate::platform::windows::foreground as tracker;
@@ -172,10 +172,15 @@ mod tests {
         pool
     }
 
+    fn data_store(pool: &SqlitePool) -> TrackingRuntimeDataStore {
+        TrackingRuntimeDataStore::new(pool.clone())
+    }
+
     #[test]
     fn sustained_participation_short_app_switch_reuses_original_continuity_group() {
         tauri::async_runtime::block_on(async {
             let pool = setup_test_db().await;
+            let data = data_store(&pool);
             let video = make_window(&[
                 ("exe_name", "Zoom.exe"),
                 ("process_path", r"C:\Program Files\Zoom\Zoom.exe"),
@@ -202,7 +207,7 @@ mod tests {
                 .unwrap());
 
             let pending = load_pending_continuity(
-                &pool,
+                &data,
                 Some(&video),
                 Some(&previous_status),
                 &chat,
@@ -213,7 +218,7 @@ mod tests {
             .unwrap();
 
             let switch_reason = transition::apply_window_transition(
-                &pool,
+                &data,
                 Some(&video),
                 &chat,
                 10_000,
@@ -230,7 +235,7 @@ mod tests {
                     70_000,
                 );
             let return_reason = transition::apply_window_transition(
-                &pool,
+                &data,
                 Some(&chat),
                 &resumed_video,
                 70_000,
@@ -266,6 +271,7 @@ mod tests {
     fn sustained_participation_return_after_continuity_window_starts_new_group() {
         tauri::async_runtime::block_on(async {
             let pool = setup_test_db().await;
+            let data = data_store(&pool);
             let video = make_window(&[
                 ("exe_name", "Zoom.exe"),
                 ("process_path", r"C:\Program Files\Zoom\Zoom.exe"),
@@ -292,7 +298,7 @@ mod tests {
                 .unwrap());
 
             let pending = load_pending_continuity(
-                &pool,
+                &data,
                 Some(&video),
                 Some(&previous_status),
                 &chat,
@@ -303,7 +309,7 @@ mod tests {
             .unwrap();
 
             let switch_reason = transition::apply_window_transition(
-                &pool,
+                &data,
                 Some(&video),
                 &chat,
                 10_000,
@@ -320,7 +326,7 @@ mod tests {
                     250_000,
                 );
             let return_reason = transition::apply_window_transition(
-                &pool,
+                &data,
                 Some(&chat),
                 &resumed_video,
                 250_000,
@@ -356,6 +362,7 @@ mod tests {
     fn ordinary_short_app_switch_reuses_original_continuity_group() {
         tauri::async_runtime::block_on(async {
             let pool = setup_test_db().await;
+            let data = data_store(&pool);
             let coding = make_window(&[
                 ("exe_name", "Code.exe"),
                 (
@@ -388,7 +395,7 @@ mod tests {
                 .unwrap());
 
             let pending = load_pending_continuity(
-                &pool,
+                &data,
                 Some(&coding),
                 Some(&previous_status),
                 &chat,
@@ -399,7 +406,7 @@ mod tests {
             .unwrap();
 
             transition::apply_window_transition(
-                &pool,
+                &data,
                 Some(&coding),
                 &chat,
                 10_000,
@@ -416,7 +423,7 @@ mod tests {
                     70_000,
                 );
             transition::apply_window_transition(
-                &pool,
+                &data,
                 Some(&chat),
                 &resumed_coding,
                 70_000,
@@ -450,6 +457,7 @@ mod tests {
     fn ordinary_return_after_continuity_window_starts_new_group() {
         tauri::async_runtime::block_on(async {
             let pool = setup_test_db().await;
+            let data = data_store(&pool);
             let coding = make_window(&[
                 ("exe_name", "Code.exe"),
                 (
@@ -482,7 +490,7 @@ mod tests {
                 .unwrap());
 
             let pending = load_pending_continuity(
-                &pool,
+                &data,
                 Some(&coding),
                 Some(&previous_status),
                 &chat,
@@ -493,7 +501,7 @@ mod tests {
             .unwrap();
 
             transition::apply_window_transition(
-                &pool,
+                &data,
                 Some(&coding),
                 &chat,
                 10_000,
@@ -510,7 +518,7 @@ mod tests {
                     250_000,
                 );
             transition::apply_window_transition(
-                &pool,
+                &data,
                 Some(&chat),
                 &resumed_coding,
                 250_000,
@@ -544,6 +552,7 @@ mod tests {
     fn mixed_trackable_and_non_trackable_short_switch_reuses_original_continuity_group() {
         tauri::async_runtime::block_on(async {
             let pool = setup_test_db().await;
+            let data = data_store(&pool);
             let coding = make_window(&[
                 ("exe_name", "Code.exe"),
                 (
@@ -583,7 +592,7 @@ mod tests {
                 .unwrap());
 
             let pending = load_pending_continuity(
-                &pool,
+                &data,
                 Some(&coding),
                 Some(&previous_status),
                 &widget,
@@ -594,7 +603,7 @@ mod tests {
             .unwrap();
 
             transition::apply_window_transition(
-                &pool,
+                &data,
                 Some(&coding),
                 &widget,
                 10_000,
@@ -607,7 +616,7 @@ mod tests {
             let chat_continuity_group_start_time =
                 resolve_next_session_continuity_group_start_time(Some(&pending), &chat, 40_000);
             transition::apply_window_transition(
-                &pool,
+                &data,
                 Some(&widget),
                 &chat,
                 40_000,
@@ -632,7 +641,7 @@ mod tests {
                 70_000,
             );
             transition::apply_window_transition(
-                &pool,
+                &data,
                 Some(&chat),
                 &resumed_coding,
                 70_000,
@@ -666,6 +675,7 @@ mod tests {
     fn mixed_trackable_and_non_trackable_return_after_total_window_starts_new_group() {
         tauri::async_runtime::block_on(async {
             let pool = setup_test_db().await;
+            let data = data_store(&pool);
             let coding = make_window(&[
                 ("exe_name", "Code.exe"),
                 (
@@ -705,7 +715,7 @@ mod tests {
                 .unwrap());
 
             let pending = load_pending_continuity(
-                &pool,
+                &data,
                 Some(&coding),
                 Some(&previous_status),
                 &widget,
@@ -716,7 +726,7 @@ mod tests {
             .unwrap();
 
             transition::apply_window_transition(
-                &pool,
+                &data,
                 Some(&coding),
                 &widget,
                 10_000,
@@ -729,7 +739,7 @@ mod tests {
             let chat_continuity_group_start_time =
                 resolve_next_session_continuity_group_start_time(Some(&pending), &chat, 100_000);
             transition::apply_window_transition(
-                &pool,
+                &data,
                 Some(&widget),
                 &chat,
                 100_000,
@@ -754,7 +764,7 @@ mod tests {
                 220_000,
             );
             transition::apply_window_transition(
-                &pool,
+                &data,
                 Some(&chat),
                 &resumed_coding,
                 220_000,

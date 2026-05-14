@@ -120,6 +120,7 @@
 - `npm run test:release`
 - `npm run test:startup`
 - `npm run test:ui-smoke`
+- `npm run test:ui-browser-smoke`
 - `npm run build`
 - `npm run check:bundle`
 
@@ -130,6 +131,8 @@
 它在前端验证链之外继续执行：
 
 - `npm run check:rust`
+
+Rust 默认门槛包含 `cargo check`、Rust 测试与 `cargo clippy -- -D warnings`，其中 clippy 通过 `npm run check:rust:clippy` 单独暴露，便于局部复查。
 
 命中风险时追加验证：
 
@@ -144,6 +147,8 @@
 `check:architecture` 是前端 owner 边界的轻量结构防线。它默认阻止 `src/features/*/components/**` 与 `src/features/*/hooks/**` 直接绕过 feature-owned service 访问 persistence、Tauri API 或 `invoke`。
 
 `test:ui-smoke` 是当前仓库的最小 UI smoke 防线。它不依赖真实 Tauri runtime，而是通过 stub Tauri API、SSR 渲染 AppShell，并确认主导航和 Dashboard 首屏可以被构建与渲染。
+
+`test:ui-browser-smoke` 是真实浏览器/Vite 页面防线。它启动本地 Vite server，用 headless Edge/Chrome 打开主界面，在 stub Tauri API 下检查 Dashboard、主导航、Settings 主题弹窗、控制台 error 与基础横向溢出。
 
 `check:bundle` 是保守 bundle 预算防线。它在生产构建之后检查关键 JS chunk 与总 gzip 体积，防止静默引入明显超预算依赖。
 

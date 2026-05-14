@@ -109,7 +109,7 @@ pub fn pick_backup_save_file(initial_path: Option<String>) -> Option<String> {
     if let Some(dir) = resolve_dialog_directory(initial_path) {
         dialog = dialog.set_directory(dir);
     }
-    dialog = dialog.set_file_name(&backup_file_name());
+    dialog = dialog.set_file_name(backup_file_name());
 
     dialog
         .save_file()

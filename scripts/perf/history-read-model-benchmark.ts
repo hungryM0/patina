@@ -2,7 +2,7 @@ import { buildTimelineSessions } from "../../src/shared/lib/sessionReadCompiler.
 import { compileForRange, materializeLiveSessions } from "../../src/shared/lib/readModelCore.ts";
 import { buildHistoryReadModel } from "../../src/features/history/services/historyReadModel.ts";
 import { resolveTrackerHealth } from "../../src/shared/types/tracking.ts";
-import type { HistorySession } from "../../src/shared/lib/sessionReadRepository.ts";
+import type { HistorySession } from "../../src/shared/types/sessions.ts";
 import { measureBenchmark, printBenchmarkReport } from "./benchmarkUtils.ts";
 
 function makeSession(id: number, startTime: number, duration: number, exeName: string): HistorySession {

@@ -1,4 +1,5 @@
 use crate::data::sqlite_pool::wait_for_sqlite_pool;
+use crate::data::tracking_runtime::TrackingRuntimeDataStore;
 use crate::domain::tracking::TrackingStatusSnapshot;
 use serde::Serialize;
 
@@ -18,7 +19,8 @@ pub async fn get_current_tracking_snapshot(
     app: tauri::AppHandle,
 ) -> Result<CurrentTrackingSnapshot, String> {
     let pool = wait_for_sqlite_pool(&app).await?;
-    let snapshot = crate::engine::tracking::runtime::load_current_tracking_snapshot(&pool).await?;
+    let data = TrackingRuntimeDataStore::new(pool);
+    let snapshot = crate::engine::tracking::runtime::load_current_tracking_snapshot(&data).await?;
 
     Ok(CurrentTrackingSnapshot {
         window: snapshot.window,

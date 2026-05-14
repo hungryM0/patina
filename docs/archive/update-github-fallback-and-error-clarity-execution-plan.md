@@ -10,7 +10,7 @@
 
 - 当前没有自有域名或自建更新源。
 - 继续使用 GitHub Release 作为安装包发布源。
-- 继续使用 `raw.githubusercontent.com` 上的 `latest.json` 作为更新清单入口。
+- 继续使用 GitHub Release asset 上的 `latest.json` 作为更新清单入口，即 `https://github.com/Ceceliaee/time-tracking/releases/latest/download/latest.json`。
 
 ---
 
@@ -20,7 +20,7 @@
 
 1. 检查更新：
    - 访问 `latest.json`
-   - 当前来源是 `raw.githubusercontent.com`
+   - 当前来源是 GitHub Release asset 直链：`github.com/.../releases/latest/download/latest.json`
 2. 下载更新：
    - 访问 GitHub Release 安装包地址
    - 当前来源是 `github.com/.../releases/download/...`

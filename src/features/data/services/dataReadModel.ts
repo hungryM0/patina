@@ -1,4 +1,4 @@
-import type { HistorySession } from "../../../shared/lib/sessionReadRepository.ts";
+import type { HistorySession } from "../../../shared/types/sessions.ts";
 import {
   compileSessions,
   buildDailySummaries,

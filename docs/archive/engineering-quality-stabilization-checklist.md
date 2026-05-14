@@ -737,7 +737,7 @@
 - [x] 发布前追加验证（按改动风险触发）：涉及 release/changelog/updater 内容时，追加 `npm run release:validate-changelog`（见 `package.json` 与 `scripts/release.ts`）。
 - [x] 发布前追加验证（按边界触发）：涉及 Rust tracking 主链、数据边界或恢复路径时，追加 `cargo check`（沿用当前清单既有口径，不上升为默认基线）。
 - [x] 放行判定（保守口径）：仅跑前端基线不足以覆盖发布相关风险；凡命中上述追加条件而未补跑对应验证，不视为“可发布”。
-- [x] 发布链真实验证已补齐到当前阶段要求：当前仓库已新增单一 `npm run release:check`，会串行执行 `npm run check`、`cargo check --manifest-path src-tauri/Cargo.toml --quiet`、`npm run release:validate-changelog`；同时 `npm run release:prepare-assets -- <version> <bundle-dir> <output-dir> <repository>` 已将 installer / `.sig` / `latest.json` 生成校验收回仓库脚本。本地已额外实证真实 NSIS installer 可成功构建，GitHub 发布上下文也已真实成功产出 installer、`.sig`、`latest.json`、更新 `updates` 分支，并完成真实升级链路验证。
+- [x] 发布链真实验证已补齐到当前阶段要求：当前仓库已新增单一 `npm run release:check`，会串行执行 `npm run check`、`cargo check --manifest-path src-tauri/Cargo.toml --quiet`、`npm run release:validate-changelog`；同时 `npm run release:prepare-assets -- <version> <bundle-dir> <output-dir> <repository>` 已将 installer / `.sig` / `latest.json` 生成校验收回仓库脚本。本地已额外实证真实 NSIS installer 可成功构建，GitHub 发布上下文也已真实成功产出 installer、`.sig`、Release asset `latest.json`，并完成真实升级链路验证。
 
 ### 14.2 日常改动与发布改动分层
 
@@ -750,7 +750,7 @@
 - [x] 本阶段已收口（默认门槛）：发布前最低门槛固定为 `npm run check`，并明确了命中条件时的追加验证入口。
 - [x] 本阶段已收口（分层规则）：日常改动与发布改动统一按“默认门槛 + 命中即追加”执行，且发布放行口径更保守，命中追加条件未补跑时不视为“可发布”。
 - [x] 已新增代码级“一键发布前全量验证”脚本：`npm run release:check` 会串行执行 `npm run check`、`cargo check --manifest-path src-tauri/Cargo.toml --quiet`、`npm run release:validate-changelog`。
-- [x] 发布上下文额外验证已完成：GitHub 发布上下文已真实成功产出 installer、`.sig`、`latest.json`，更新 `updates` 分支，并完成真实升级链路验证。
+- [x] 发布上下文额外验证已完成：GitHub 发布上下文已真实成功产出 installer、`.sig`、Release asset `latest.json`，并完成真实升级链路验证。
 
 完成本阶段后，发布前“门槛与分层规则”与“发布链路实证”都已补齐到当前阶段要求；后续若再变更 release/updater 行为，应按同样口径重新验证。
 
@@ -824,7 +824,7 @@
 - [x] backup / restore / cleanup 的默认验证动作已清楚（见 7.2 与 10.2；默认 `npm run check`，命中数据边界追加 `cargo check`，恢复链路改动追加人工路径验证）
 - [x] 发布前最低门槛已清楚（见 14.1/14.2；默认 `npm run check`，命中条件时追加 `cargo check` / `npm run release:validate-changelog`）
 - [x] tracking 侧已收口到当前阶段要求：`pause / resume` 主链、`pause -> lock` / `lock -> pause`、startup seal 数据库动作与 `startup seal -> lock / suspend / pause` no-op、`cleanup + stale`、`startup-sealed + cleanup + stale`、前端事件消费层、runtime snapshot loader、`AppShell` 刷新编排、cleanup 显式语义边界、replay cutoff-boundary/stale 矩阵，以及 `startup-sealed` / `backup-restored` / `watchdog-sealed` / `tracking-paused-sealed` / `session-ended-lock` / `session-ended-suspend` / `session-transition` 的 emitted reason -> refresh -> snapshot -> read model 联动保护均已补齐到当前阶段要求。
-- [x] 发布与恢复链路侧已收口到当前阶段要求：代码级一键预检 `npm run release:check` 已存在，installer / `.sig` / `latest.json` 生成校验也已收口为 `npm run release:prepare-assets -- <version> <bundle-dir> <output-dir> <repository>`；本地已额外实证真实 NSIS installer 可成功构建，GitHub 发布上下文也已成功产出 installer、`.sig`、`latest.json`、更新 `updates` 分支，并完成真实升级链路验证（见 14.1/14.3）
+- [x] 发布与恢复链路侧已收口到当前阶段要求：代码级一键预检 `npm run release:check` 已存在，installer / `.sig` / `latest.json` 生成校验也已收口为 `npm run release:prepare-assets -- <version> <bundle-dir> <output-dir> <repository>`；本地已额外实证真实 NSIS installer 可成功构建，GitHub 发布上下文也已成功产出 installer、`.sig`、Release asset `latest.json`，并完成真实升级链路验证（见 14.1/14.3）
 
 ### 16.2 代码质量收口检查
 

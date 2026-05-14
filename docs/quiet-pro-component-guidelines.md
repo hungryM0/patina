@@ -38,7 +38,8 @@
 
 - `Tauri` 桌面应用
 - 时间追踪与工作陪伴型工具
-- 以 `Dashboard / History / Classification / Settings` 为核心工作面的产品
+- 以 `Dashboard / History / Data / App Mapping / Settings / About` 为核心工作面的产品
+- 以更新状态、备份恢复、桌面挂件等能力作为低噪音支持面的产品
 
 因此 UI 默认应更接近：
 
@@ -204,6 +205,17 @@ Quiet Pro 的高级感来自：
 - 边框与阴影强度
 
 Quiet Pro 不鼓励“这个页面再发明一个更顺眼的新档位”。
+
+### 7.5 样式事实要有清楚 owner
+
+`src/App.css` 长期只作为样式入口，汇总导入 `src/styles/` 下的 CSS-only 文件。当前样式 owner 口径为：
+
+- `src/styles/tokens.css`：Quiet Pro token、主题 scheme 与语义变量
+- `src/styles/quiet-pro.css`：可复用组件原型
+- `src/styles/app-shell.css`：应用壳层、通用页面与响应式规则
+- `src/styles/features/*`：对应 feature 的局部样式
+
+主题 swatch 与可选主题列表这类结构化主题数据不应留在页面组件内部，优先放在稳定的 shared settings/theme owner 中，再由页面组件消费。
 
 ---
 

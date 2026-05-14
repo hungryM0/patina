@@ -9,7 +9,7 @@ import {
   ResponsiveContainer,
 } from "recharts";
 import { ChevronDown, ChevronLeft, ChevronRight, Clock, Minus, Plus } from "lucide-react";
-import { type HistorySession } from "../../../shared/lib/sessionReadRepository";
+import { type HistorySession } from "../../../shared/types/sessions";
 import { UI_TEXT } from "../../../shared/copy/uiText.ts";
 import {
   formatDuration,

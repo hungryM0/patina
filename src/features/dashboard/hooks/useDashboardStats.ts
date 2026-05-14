@@ -1,5 +1,5 @@
 ﻿import { startTransition, useCallback, useEffect, useMemo, useState } from "react";
-import type { HistorySession } from "../../../shared/lib/sessionReadRepository";
+import type { HistorySession } from "../../../shared/types/sessions";
 import {
   buildDashboardReadModel,
   loadIconSnapshot,

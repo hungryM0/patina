@@ -1,6 +1,5 @@
-use crate::data::repositories::icon_cache;
+use crate::data::tracking_runtime::{TrackingRuntimeDataError, TrackingRuntimeDataStore};
 use crate::platform::windows::icon as icon_extractor;
-use sqlx::{Pool, Sqlite};
 use std::ffi::OsStr;
 use std::os::windows::ffi::OsStrExt;
 use std::path::{Path, PathBuf};
@@ -30,13 +29,13 @@ pub fn map_app_name(exe_name: &str, process_path: &str) -> String {
 }
 
 pub async fn ensure_icon_cache(
-    pool: &Pool<Sqlite>,
+    data: &TrackingRuntimeDataStore,
     exe_name: &str,
     process_path: &str,
     root_owner_hwnd: &str,
     hwnd: &str,
-) -> Result<(), sqlx::Error> {
-    if icon_cache::is_icon_cached(pool, exe_name).await? {
+) -> Result<(), TrackingRuntimeDataError> {
+    if data.is_icon_cached(exe_name).await? {
         return Ok(());
     }
 
@@ -54,7 +53,7 @@ pub async fn ensure_icon_cache(
         return Ok(());
     };
 
-    icon_cache::upsert_icon(pool, exe_name, &base64_icon, now_ms()).await?;
+    data.upsert_icon(exe_name, &base64_icon, now_ms()).await?;
 
     Ok(())
 }

@@ -195,6 +195,8 @@ src/
   platform/
 ```
 
+`src/styles/` 是 CSS-only 的 Quiet Pro 样式资产区，由 `src/App.css` 作为单入口汇总导入；它不承接 TypeScript 业务代码、平台适配或跨层逻辑，因此不视为新的前端 owner 层。
+
 前端终局结构中不再保留：
 
 - 根层 `src/lib/`
@@ -406,12 +408,22 @@ tracking 相关逻辑应继续在：
 engine/tracking/
   runtime.rs
   transition.rs
+  active_session.rs
+  continuity.rs
+  session_timeout.rs
+  sustained_participation.rs
   watchdog.rs
   startup.rs
   metadata.rs
+  runtime/
+    loop_state.rs
+    power_lifecycle.rs
+    support.rs
+    window_polling.rs
 ```
 
 这一结构中演进，而不是回流到单个超厚文件或入口层。
+`runtime.rs` 保持主循环编排；持续参与、连续性、封口、轮询、电源生命周期等细节优先留在相邻 owner 模块内。
 
 ### 6.6 `domain/`
 
@@ -516,7 +528,7 @@ Rust 侧允许为了稳定演进保留少量入口协调或兼容封装，但规
 - 核心行为流程：进 `engine/*`
 - 领域模型与语义：进 `domain/*`
 - sqlite 与仓储：进 `data/*`
-- 持续参与识别相关的状态机、信号融合、identity 归一与诊断快照：继续按 `platform/windows/* -> domain/tracking.rs -> engine/tracking/runtime.rs` 的 owner 链收口，不回流到 `commands/*`、`lib.rs` 或前端本地规则
+- 持续参与识别相关的状态机、信号融合、identity 归一与诊断快照：继续按 `platform/windows/* -> domain/tracking.rs / domain/tracking/* -> engine/tracking/sustained_participation.rs / runtime.rs` 的 owner 链收口，不回流到 `commands/*`、`lib.rs` 或前端本地规则
 
 不确定时，优先放在最小作用域，而不是优先抽公共层。
 

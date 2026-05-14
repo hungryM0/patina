@@ -15,6 +15,7 @@ import {
   saveSettingsPageStateWithDeps,
 } from "./settingsPageStateInteractions.ts";
 import type { AppSettings } from "../../../shared/settings/appSettings";
+import type { ThemeLibrary } from "../../../shared/settings/colorSchemeOptions.ts";
 import type { CleanupRange } from "../types";
 
 const buildCleanupOptions = (): Array<{ value: CleanupRange; label: string }> => [
@@ -36,6 +37,7 @@ const secondsToMinute = (seconds: number, min: number, max: number) =>
 
 export interface UseSettingsPageStateOptions {
   onSettingsChanged: (settings: AppSettings) => void;
+  onColorSchemeSaved?: (settings: AppSettings) => void;
   onDirtyChange?: (dirty: boolean) => void;
   onToast?: (message: string, tone?: QuietToastTone) => void;
   onRegisterSaveHandler?: (handler: (() => Promise<boolean>) | null) => void;
@@ -43,6 +45,7 @@ export interface UseSettingsPageStateOptions {
 
 export function useSettingsPageState({
   onSettingsChanged,
+  onColorSchemeSaved,
   onDirtyChange,
   onToast,
   onRegisterSaveHandler,
@@ -128,11 +131,7 @@ export function useSettingsPageState({
   const handleChange = useCallback(<K extends keyof AppSettings>(key: K, value: AppSettings[K]) => {
     setDraftSettings((current) => {
       if (!current) return current;
-      const nextDraft = { ...current, [key]: value } as AppSettings;
-      if (key === "launchAtLogin" && value === false) {
-        nextDraft.startMinimized = false;
-      }
-      return nextDraft;
+      return { ...current, [key]: value } as AppSettings;
     });
   }, []);
 
@@ -180,6 +179,46 @@ export function useSettingsPageState({
       return false;
     }
   }, [appVersion, draftSettings, hasUnsavedChanges, notify, onSettingsChanged, saveStatus, savedSettings]);
+
+  const handleSaveColorScheme = useCallback(async (library: ThemeLibrary): Promise<boolean> => {
+    if (!savedSettings || !draftSettings) return false;
+    if (saveStatus === "saving") return false;
+
+    const key = library === "dark" ? "colorSchemeDark" : "colorSchemeLight";
+    if (savedSettings[key] === draftSettings[key]) {
+      return true;
+    }
+
+    setSaveStatus("saving");
+    try {
+      const nextSavedSettings = {
+        ...savedSettings,
+        [key]: draftSettings[key],
+      };
+      const result = await SettingsRuntimeAdapterService.commitSettingsPatch({
+        [key]: draftSettings[key],
+      });
+      setSavedSettings(nextSavedSettings);
+      setSettingsBootstrapCache({
+        settings: nextSavedSettings,
+        appVersion,
+      });
+      onColorSchemeSaved?.(nextSavedSettings);
+      setSaveStatus("saved");
+      window.setTimeout(() => setSaveStatus("idle"), 1800);
+      if (result.runtimeSync === "failed") {
+        notify(UI_TEXT.toast.settingsRuntimeSyncPartial, "warning");
+      } else {
+        notify(UI_TEXT.settings.saved, "success");
+      }
+      return true;
+    } catch (error) {
+      console.error("save color scheme failed", error);
+      setSaveStatus("idle");
+      notify(UI_TEXT.settings.saveFailed, "warning");
+      return false;
+    }
+  }, [appVersion, draftSettings, notify, onColorSchemeSaved, saveStatus, savedSettings]);
 
   useEffect(() => {
     onRegisterSaveHandler?.(handleSave);
@@ -302,6 +341,7 @@ export function useSettingsPageState({
     hasUnsavedChanges,
     handleCancel,
     handleSave,
+    handleSaveColorScheme,
     handleChange,
     cleanupRange,
     setCleanupRange,

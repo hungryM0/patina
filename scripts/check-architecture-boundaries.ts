@@ -1,7 +1,7 @@
 import { readdirSync, readFileSync, statSync } from "node:fs";
 import { join, relative, sep } from "node:path";
 
-const SCAN_ROOTS = ["src/features"] as const;
+const SCAN_ROOTS = ["src/features", "src/shared"] as const;
 
 interface SourceFile {
   path: string;
@@ -49,11 +49,15 @@ function isFeatureComponentOrHook(path: string) {
   return /^src\/features\/[^/]+\/(components|hooks)\//.test(path);
 }
 
+function isSharedSource(path: string) {
+  return /^src\/shared\//.test(path);
+}
+
 function findArchitectureViolations(files: SourceFile[]): ArchitectureViolation[] {
   const violations: ArchitectureViolation[] = [];
 
   for (const file of files) {
-    if (!isFeatureComponentOrHook(file.path)) {
+    if (!isFeatureComponentOrHook(file.path) && !isSharedSource(file.path)) {
       continue;
     }
 
@@ -63,7 +67,9 @@ function findArchitectureViolations(files: SourceFile[]): ArchitectureViolation[
         violations.push({
           path: file.path,
           line: index + 1,
-          rule: "feature-ui-no-persistence",
+          rule: isSharedSource(file.path)
+            ? "shared-no-platform-persistence"
+            : "feature-ui-no-persistence",
           text: lineText.trim(),
         });
       }
@@ -102,12 +108,16 @@ function runSelfTest() {
       content: "const repository = await import('../../../platform/persistence/sessionReadRepository.ts');",
     },
     {
+      path: "src/shared/lib/sessionReadRepository.ts",
+      content: "export type { HistorySession } from '../../platform/persistence/sessionReadRepository.ts';",
+    },
+    {
       path: "src/features/settings/hooks/useSettings.ts",
       content: "await invoke('cmd_save_settings');",
     },
   ]);
 
-  if (violations.length !== 2) {
+  if (violations.length !== 3) {
     throw new Error("Architecture boundary self-test failed");
   }
 }

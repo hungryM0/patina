@@ -1,5 +1,5 @@
 import type { AppStat } from "../../../shared/types/app.ts";
-import type { HistorySession } from "../../../shared/lib/sessionReadRepository.ts";
+import type { HistorySession } from "../../../shared/types/sessions.ts";
 import type { AppCategory } from "../../../shared/classification/categoryTokens.ts";
 import { AppClassification } from "../../../shared/classification/appClassification.ts";
 

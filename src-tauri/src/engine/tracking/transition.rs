@@ -1,32 +1,32 @@
-use crate::data::repositories::sessions;
+use crate::data::tracking_runtime::{TrackingRuntimeDataError, TrackingRuntimeDataStore};
 use crate::domain::tracking::{
     self, WindowSessionIdentity, WindowTrackingCandidate, WindowTransitionDecision,
 };
 use crate::platform::windows::foreground as tracker;
-use sqlx::{Pool, Sqlite};
 use std::future::Future;
 use std::pin::Pin;
 
-pub(crate) type StartSessionFn =
-    for<'a> fn(
-        pool: &'a Pool<Sqlite>,
-        window: &'a tracker::WindowInfo,
-        start_time: i64,
-        continuity_group_start_time: i64,
-    ) -> Pin<Box<dyn Future<Output = Result<bool, sqlx::Error>> + Send + 'a>>;
+pub(crate) type StartSessionFn = for<'a> fn(
+    data: &'a TrackingRuntimeDataStore,
+    window: &'a tracker::WindowInfo,
+    start_time: i64,
+    continuity_group_start_time: i64,
+) -> Pin<
+    Box<dyn Future<Output = Result<bool, TrackingRuntimeDataError>> + Send + 'a>,
+>;
 
 pub(crate) async fn apply_window_transition(
-    pool: &Pool<Sqlite>,
+    data: &TrackingRuntimeDataStore,
     previous_window: Option<&tracker::WindowInfo>,
     next_window: &tracker::WindowInfo,
     now_ms: i64,
     next_continuity_group_start_time: i64,
     start_session: StartSessionFn,
-) -> Result<Option<&'static str>, sqlx::Error> {
+) -> Result<Option<&'static str>, TrackingRuntimeDataError> {
     let decision = plan_window_transition(previous_window, next_window, now_ms);
     if !decision.has_mutation_plan() {
         return recover_missing_active_session(
-            pool,
+            data,
             next_window,
             now_ms,
             next_continuity_group_start_time,
@@ -38,43 +38,41 @@ pub(crate) async fn apply_window_transition(
     let mut did_mutate = false;
 
     if decision.should_end_previous {
-        did_mutate |=
-            sessions::end_active_sessions(pool, decision.resolved_end_time(now_ms)).await?;
+        did_mutate |= data
+            .end_active_sessions(decision.resolved_end_time(now_ms))
+            .await?;
     }
 
     if decision.should_start_next {
         did_mutate |=
-            start_session(pool, next_window, now_ms, next_continuity_group_start_time).await?;
+            start_session(data, next_window, now_ms, next_continuity_group_start_time).await?;
     }
 
     if decision.should_refresh_metadata {
-        did_mutate |= sessions::refresh_active_session_metadata(
-            pool,
-            &next_window.exe_name,
-            &next_window.title,
-        )
-        .await?;
+        did_mutate |= data
+            .refresh_active_session_metadata(&next_window.exe_name, &next_window.title)
+            .await?;
     }
 
     Ok(decision.mutation_reason(did_mutate))
 }
 
 pub(crate) async fn recover_missing_active_session(
-    pool: &Pool<Sqlite>,
+    data: &TrackingRuntimeDataStore,
     window: &tracker::WindowInfo,
     now_ms: i64,
     continuity_group_start_time: i64,
     start_session: StartSessionFn,
-) -> Result<Option<&'static str>, sqlx::Error> {
+) -> Result<Option<&'static str>, TrackingRuntimeDataError> {
     if !is_trackable_window(Some(window)) {
         return Ok(None);
     }
 
-    if sessions::load_active_session(pool).await?.is_some() {
+    if data.load_active_session().await?.is_some() {
         return Ok(None);
     }
 
-    if start_session(pool, window, now_ms, continuity_group_start_time).await? {
+    if start_session(data, window, now_ms, continuity_group_start_time).await? {
         return Ok(Some("session-recovered"));
     }
 
