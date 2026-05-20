@@ -21,26 +21,11 @@ Time Tracker is mainly designed for people who:
 
 ## Interface Preview
 
-<!--
-Recommended screenshot location and filenames:
-
-- docs/assets/readme/dashboard.png
-- docs/assets/readme/history.png
-- docs/assets/readme/data.png
-- docs/assets/readme/mapping.png
-- docs/assets/readme/settings.png
-- docs/assets/readme/about.png
-
-After screenshots are ready, insert them under the matching section title:
-
-![Today page](docs/assets/readme/dashboard.png)
--->
-
 |  |  |
 | --- | --- |
-| **Today**<br><!-- ![Today page](docs/assets/readme/dashboard.png) --><br>Quickly review today's effective activity, app ranking, category distribution, hourly activity rhythm, and current tracking status. | **History**<br><!-- ![History page](docs/assets/readme/history.png) --><br>Review the timeline by date, inspect merged app activity segments, and view window title details under the same app. |
-| **Data**<br><!-- ![Data page](docs/assets/readme/data.png) --><br>Observe activity trends across the last 7 days, last 30 days, and past year, review the long-term heatmap, and inspect usage curves by app. | **Apps**<br><!-- ![Apps page](docs/assets/readme/mapping.png) --><br>Rename apps, adjust categories and colors, exclude apps from stats, disable title capture, and delete historical sessions for a specific app. |
-| **Settings**<br><!-- ![Settings page](docs/assets/readme/settings.png) --><br>Manage tracking rules, tray behavior, theme colors, interface language, local backup, restore, and history cleanup. | **About**<br><!-- ![About page](docs/assets/readme/about.png) --><br>View the current version, check for updates, download a new version, and use the manual download entry if updating fails. |
+| **Today**<br>![Today page](assets/readme/dashboard.png)<br>Quickly review today's effective activity, app ranking, category distribution, hourly activity rhythm, and current tracking status. | **History**<br>![History page](assets/readme/history.png)<br>Review the timeline by date, inspect merged app activity segments, and view window title details under the same app. |
+| **Data**<br>![Data page](assets/readme/data.png)<br>Observe activity trends across the last 7 days, last 30 days, and past year, review the long-term heatmap, and inspect usage curves by app. | **Apps**<br>![Apps page](assets/readme/mapping.png)<br>Rename apps, adjust categories and colors, exclude apps from stats, disable title capture, and delete historical sessions for a specific app. |
+| **Settings**<br>![Settings page](assets/readme/settings.png)<br>Manage tracking rules, tray behavior, theme colors, interface language, local backup, restore, and history cleanup. | **About**<br>![About page](assets/readme/about.png)<br>View the current version, check for updates, download a new version, and use the manual download entry if updating fails. |
 
 ## Tracking Reliability
 

@@ -21,26 +21,11 @@ Time Tracker 主要服务这类使用场景：
 
 ## 界面预览
 
-<!--
-截图建议放在 docs/assets/readme/ 下，并使用这些文件名：
-
-- dashboard.png
-- history.png
-- data.png
-- mapping.png
-- settings.png
-- about.png
-
-截图准备好后，可以在对应小节标题下方插入：
-
-![今天页面](docs/assets/readme/dashboard.png)
--->
-
 |  |  |
 | --- | --- |
-| **今天**<br><!-- ![今天页面](docs/assets/readme/dashboard.png) --><br>快速查看今日有效活动、应用排行、分类分布、小时级活动节奏，以及当前追踪状态。 | **历史**<br><!-- ![历史页面](docs/assets/readme/history.png) --><br>按日期回看历史时间线，查看合并后的应用活动片段，以及同一应用下的窗口标题明细。 |
-| **数据**<br><!-- ![数据页面](docs/assets/readme/data.png) --><br>观察近 7 天、近 30 天和近一年的活动趋势、长期热力图，并按应用查看使用曲线。 | **应用**<br><!-- ![应用页面](docs/assets/readme/mapping.png) --><br>重命名应用、调整分类和颜色、排除统计、关闭标题记录，并删除指定应用的历史会话。 |
-| **设置**<br><!-- ![设置页面](docs/assets/readme/settings.png) --><br>管理追踪规则、驻留行为、主题配色、界面语言、本地备份、恢复和历史清理。 | **关于**<br><!-- ![关于页面](docs/assets/readme/about.png) --><br>查看当前版本、检查更新、下载新版本，并在更新失败时使用手动下载入口。 |
+| **今天**<br>![今天页面](assets/readme.zh-CN/dashboard.png)<br>快速查看今日有效活动、应用排行、分类分布、小时级活动节奏，以及当前追踪状态。 | **历史**<br>![历史页面](assets/readme.zh-CN/history.png)<br>按日期回看历史时间线，查看合并后的应用活动片段，以及同一应用下的窗口标题明细。 |
+| **数据**<br>![数据页面](assets/readme.zh-CN/data.png)<br>观察近 7 天、近 30 天和近一年的活动趋势、长期热力图，并按应用查看使用曲线。 | **应用**<br>![应用页面](assets/readme.zh-CN/mapping.png)<br>重命名应用、调整分类和颜色、排除统计、关闭标题记录，并删除指定应用的历史会话。 |
+| **设置**<br>![设置页面](assets/readme.zh-CN/settings.png)<br>管理追踪规则、驻留行为、主题配色、界面语言、本地备份、恢复和历史清理。 | **关于**<br>![关于页面](assets/readme.zh-CN/about.png)<br>查看当前版本、检查更新、下载新版本，并在更新失败时使用手动下载入口。 |
 
 ## 追踪可靠性
 
