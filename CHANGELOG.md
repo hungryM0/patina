@@ -36,6 +36,33 @@ App note en: TBD.
 
 - 暂无。
 
+## [1.0.0] - 2026-05-21
+
+Release: 确立 1.0 稳定版本线，完成发布验证与本地桌面主路径 smoke。
+App note: 进入 1.0 稳定版本线。
+App note en: Time Tracker is now on the 1.0 stable line.
+
+### Added
+
+- 暂无。
+
+### Changed
+
+- 正式进入 1.0 稳定版本线，后续版本按标准 SemVer 管理。
+- 完成 v0.8.1 发布演练与发布后 smoke，确认主路径、更新入口与数据安全流程可用。
+
+### Fixed
+
+- 暂无。
+
+### Removed
+
+- 暂无。
+
+### Internal
+
+- 归档 v0.8.1 发布后 smoke 清单，作为 1.0.0 发布决策依据。
+
 ## [0.8.1] - 2026-05-21
 
 Release: 收窄旧启动预热与测试辅助边界，提升发布前工程验证一致性。
