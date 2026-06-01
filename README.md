@@ -141,6 +141,7 @@ src-tauri/target/release/bundle/
 
 If you want to contribute, adjust product direction, or review architecture boundaries, start with:
 
+- [`CONTRIBUTING.md`](CONTRIBUTING.md#english) for the contribution and pull request workflow
 - [`docs/product-principles-and-scope.md`](docs/product-principles-and-scope.md)
 - [`docs/roadmap-and-prioritization.md`](docs/roadmap-and-prioritization.md)
 - [`docs/engineering-quality.md`](docs/engineering-quality.md)

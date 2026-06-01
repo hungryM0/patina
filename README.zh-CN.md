@@ -141,6 +141,7 @@ src-tauri/target/release/bundle/
 
 如果你要参与贡献、调整产品方向或审查架构边界，建议先阅读：
 
+- [`CONTRIBUTING.md`](CONTRIBUTING.md#zh-cn)：贡献与 Pull Request 协作流程
 - [`docs/product-principles-and-scope.md`](docs/product-principles-and-scope.md)
 - [`docs/roadmap-and-prioritization.md`](docs/roadmap-and-prioritization.md)
 - [`docs/engineering-quality.md`](docs/engineering-quality.md)
