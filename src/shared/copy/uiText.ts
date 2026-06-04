@@ -113,6 +113,7 @@ const ZH_CN_UI_TEXT = {
   toast: {
     releaseNotesOpenFailed: "无法打开发布说明链接。",
     feedbackOpenFailed: "无法打开反馈链接。",
+    supportOpenFailed: "无法打开赞助链接。",
     settingsRuntimeSyncPartial: "设置已保存，部分运行时同步将在下次刷新后生效。",
     cleanupSuccess: "历史数据已清理。",
     cleanupFailed: "历史数据清理失败，请稍后重试。",
@@ -240,7 +241,7 @@ const ZH_CN_UI_TEXT = {
   },
   about: {
     title: "关于",
-    subtitle: "版本、更新与反馈",
+    subtitle: "版本、更新、反馈与支持",
     sectionTitle: "关于",
     appInfo: "应用信息",
     currentVersion: (version: string) => `当前版本：v${version}`,
@@ -444,6 +445,7 @@ const ZH_CN_UI_TEXT = {
     sidebarEntry: "更新",
     releaseNotes: "更新说明",
     feedback: "问题反馈",
+    support: "支持项目",
     later: "稍后",
     manualDownload: "手动下载",
     downloadInstaller: "下载安装包",
@@ -669,6 +671,7 @@ const EN_US_UI_TEXT: UiText = {
   toast: {
     releaseNotesOpenFailed: "Could not open release notes.",
     feedbackOpenFailed: "Could not open feedback link.",
+    supportOpenFailed: "Could not open support link.",
     settingsRuntimeSyncPartial: "Settings were saved. Some runtime changes will apply after the next refresh.",
     cleanupSuccess: "History records cleared.",
     cleanupFailed: "Could not clear history records. Try again later.",
@@ -796,7 +799,7 @@ const EN_US_UI_TEXT: UiText = {
   },
   about: {
     title: "About",
-    subtitle: "Version, updates, and feedback",
+    subtitle: "Version, updates, feedback, and support",
     sectionTitle: "About",
     appInfo: "App info",
     currentVersion: (version: string) => `Current version: v${version}`,
@@ -1002,6 +1005,7 @@ const EN_US_UI_TEXT: UiText = {
     sidebarEntry: "Update",
     releaseNotes: "Release notes",
     feedback: "Feedback",
+    support: "Support",
     later: "Later",
     manualDownload: "Manual download",
     downloadInstaller: "Download installer",

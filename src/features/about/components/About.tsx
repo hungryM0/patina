@@ -83,6 +83,15 @@ export default function About({
     }
   }, [notify]);
 
+  const handleOpenSupportReadme = useCallback(async () => {
+    try {
+      await SettingsRuntimeAdapterService.openSupportReadme();
+    } catch (error) {
+      console.error("open support readme link failed", error);
+      notify(UI_TEXT.toast.supportOpenFailed, "warning");
+    }
+  }, [notify]);
+
   const effectiveUpdateSnapshot = updateSnapshot ?? {
     currentVersion: appVersion,
     status: "idle",
@@ -139,6 +148,9 @@ export default function About({
           }}
           onOpenFeedback={() => {
             void handleOpenFeedback();
+          }}
+          onOpenSupportReadme={() => {
+            void handleOpenSupportReadme();
           }}
         />
       </div>

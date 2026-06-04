@@ -23,7 +23,7 @@ Time Tracker records foreground apps and organizes them into today's overview, a
 It is not a team timesheet system, but a quiet and trustworthy personal desktop time record.
 </p>
 
-![Time Tracker dashboard](assets/readme/dashboard.png)
+![Time Tracker dashboard](.github/assets/readme/dashboard.png)
 
 ## Download
 
@@ -66,9 +66,9 @@ If you just want to use the app, open the latest release page and download the `
 
 |  |  |
 | --- | --- |
-| **Today**<br>![Today page](assets/readme/dashboard.png)<br>Today's activity, app ranking, category split, hourly rhythm, and tracking status. | **History**<br>![History page](assets/readme/history.png)<br>Daily timeline, merged activity segments, and title details. |
-| **Data**<br>![Data page](assets/readme/data.png)<br>7-day, 30-day, yearly trends, heatmaps, and app curves. | **Apps**<br>![Apps page](assets/readme/mapping.png)<br>Manage app names, categories, colors, exclusions, and title capture. |
-| **Settings**<br>![Settings page](assets/readme/settings.png)<br>Adjust tracking, resident behavior, appearance, language, backup, restore, and cleanup. | **About**<br>![About page](assets/readme/about.png)<br>View the version, check updates, download releases, and read release notes. |
+| **Today**<br>![Today page](.github/assets/readme/dashboard.png)<br>Today's activity, app ranking, category split, hourly rhythm, and tracking status. | **History**<br>![History page](.github/assets/readme/history.png)<br>Daily timeline, merged activity segments, and title details. |
+| **Data**<br>![Data page](.github/assets/readme/data.png)<br>7-day, 30-day, yearly trends, heatmaps, and app curves. | **Apps**<br>![Apps page](.github/assets/readme/mapping.png)<br>Manage app names, categories, colors, exclusions, and title capture. |
+| **Settings**<br>![Settings page](.github/assets/readme/settings.png)<br>Adjust tracking, resident behavior, appearance, language, backup, restore, and cleanup. | **About**<br>![About page](.github/assets/readme/about.png)<br>View the version, check updates, download releases, and read release notes. |
 
 ## Reliability And Privacy
 
@@ -151,6 +151,16 @@ If you want to contribute, adjust product direction, or review architecture boun
 - [`docs/versioning-and-release-policy.md`](docs/versioning-and-release-policy.md)
 
 Historical execution plans and stage-specific documents are usually archived under `docs/archive/`; by default, they are not the current execution basis.
+
+## Support
+
+Time Tracker is a personal, local-first open-source project. If it has been useful in your daily work, you can support ongoing maintenance in whichever way is convenient:
+
+[<img src="https://storage.ko-fi.com/cdn/kofi2.png?v=3" height="36" alt="Buy me a coffee">](https://ko-fi.com/ceceliaee)
+
+<img src=".github/assets/support/wechat-reward.png" width="260" alt="WeChat reward code">
+
+Sponsorship helps sustain maintenance, but it does not affect feature priority, issue handling, the roadmap, or the product direction.
 
 ## Feedback
 

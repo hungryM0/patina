@@ -17,7 +17,7 @@ import {
 import { openExternalUrl } from "../../../platform/desktop/externalUrlGateway.ts";
 import { emitAppSettingsChanged } from "../../../platform/runtime/appSettingsEventGateway.ts";
 import { setAfkThreshold } from "../../../platform/runtime/trackingRuntimeGateway.ts";
-import { getUiLocale, UI_TEXT } from "../../../shared/copy/uiText.ts";
+import { getUiLocale, getUiTextLanguage, UI_TEXT } from "../../../shared/copy/uiText.ts";
 import type { CleanupRange } from "../types.ts";
 import {
   buildSessionCleanupPlan,
@@ -57,6 +57,10 @@ type PrepareBackupRestoreDeps = {
 
 const RELEASE_NOTES_URL = "https://github.com/Ceceliaee/time-tracking/releases";
 const FEEDBACK_URL = "https://github.com/Ceceliaee/time-tracking/issues/new/choose";
+const SUPPORT_README_URLS = {
+  "zh-CN": "https://github.com/Ceceliaee/time-tracking/blob/main/README.zh-CN.md#support",
+  "en-US": "https://github.com/Ceceliaee/time-tracking/blob/main/README.md#support",
+} as const;
 
 export function buildBackupPreviewSummary(preview: BackupPreview): string {
   const exportedAt = new Date(preview.exportedAtMs).toLocaleString(getUiLocale());
@@ -159,6 +163,10 @@ export class SettingsRuntimeAdapterService {
 
   static async openFeedback(): Promise<void> {
     await openExternalUrl(FEEDBACK_URL);
+  }
+
+  static async openSupportReadme(): Promise<void> {
+    await openExternalUrl(SUPPORT_README_URLS[getUiTextLanguage()]);
   }
 
   static buildSettingsPatch(

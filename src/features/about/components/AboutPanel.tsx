@@ -16,6 +16,7 @@ type AboutPanelProps = {
   onOpenUpdateDownload?: () => void;
   onOpenReleaseNotes: () => void;
   onOpenFeedback: () => void;
+  onOpenSupportReadme: () => void;
 };
 
 export default function AboutPanel({
@@ -30,6 +31,7 @@ export default function AboutPanel({
   onOpenUpdateDownload,
   onOpenReleaseNotes,
   onOpenFeedback,
+  onOpenSupportReadme,
 }: AboutPanelProps) {
   return (
     <section className="qp-panel p-5 md:p-6">
@@ -39,13 +41,17 @@ export default function AboutPanel({
       </div>
 
       <QuietSubpanel>
-        <p className="text-sm font-semibold text-[var(--qp-text-primary)]">{UI_TEXT.about.appInfo}</p>
-        <p className="mt-1 text-sm text-[var(--qp-text-secondary)]">
-          {UI_TEXT.about.currentVersion(appVersion)}
-        </p>
-        <p className="mt-0.5 text-xs text-[var(--qp-text-tertiary)]">
-          {UI_TEXT.about.description}
-        </p>
+        <div className="flex items-start justify-between gap-4">
+          <div className="min-w-0">
+            <p className="text-sm font-semibold text-[var(--qp-text-primary)]">{UI_TEXT.about.appInfo}</p>
+            <p className="mt-1 text-sm text-[var(--qp-text-secondary)]">
+              {UI_TEXT.about.currentVersion(appVersion)}
+            </p>
+            <p className="mt-0.5 text-xs text-[var(--qp-text-tertiary)]">
+              {UI_TEXT.about.description}
+            </p>
+          </div>
+        </div>
         <div className="mt-4">
           <UpdateStatusPanel
             snapshot={effectiveUpdateSnapshot}
@@ -58,6 +64,7 @@ export default function AboutPanel({
             onOpenUpdateDownload={() => onOpenUpdateDownload?.()}
             onOpenReleaseNotes={onOpenReleaseNotes}
             onOpenFeedback={onOpenFeedback}
+            onOpenSupportReadme={onOpenSupportReadme}
           />
         </div>
       </QuietSubpanel>
