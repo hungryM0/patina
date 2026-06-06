@@ -1,6 +1,7 @@
 use crate::app::state::WidgetWindowLifecycleState;
 use crate::domain::widget::{WidgetPlacement, WidgetSide};
 use crate::engine::widget as widget_engine;
+use std::time::Duration;
 use tauri::{
     AppHandle, Emitter, Manager, Monitor, PhysicalPosition, PhysicalSize, Position, Runtime, Size,
     WebviewUrl, WebviewWindow, WebviewWindowBuilder,
@@ -16,6 +17,7 @@ const WIDGET_EXPANDED_HEIGHT: u32 = 48;
 const WIDGET_COLLAPSED_WIDTH: u32 = 64;
 const WIDGET_COLLAPSED_HEIGHT: u32 = 48;
 const WIDGET_COLLAPSED_VISIBLE_WIDTH: u32 = 64;
+const WIDGET_DESTROY_AFTER_IDLE_SECS: u64 = 60;
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 struct WidgetWindowBounds {
@@ -25,7 +27,7 @@ struct WidgetWindowBounds {
     height: u32,
 }
 
-pub(crate) async fn show_widget_window<R: Runtime>(
+pub(crate) async fn show_widget_window<R: Runtime + 'static>(
     app: &AppHandle<R>,
     preferred_monitor: Option<Monitor>,
 ) -> Result<(), String> {
@@ -33,7 +35,7 @@ pub(crate) async fn show_widget_window<R: Runtime>(
     apply_widget_layout_internal(app, preferred_monitor, placement, false, false, false).await
 }
 
-pub(crate) async fn apply_widget_layout<R: Runtime>(
+pub(crate) async fn apply_widget_layout<R: Runtime + 'static>(
     app: &AppHandle<R>,
     placement: WidgetPlacement,
     expanded: bool,
@@ -48,7 +50,7 @@ pub(crate) async fn apply_widget_layout<R: Runtime>(
     apply_widget_layout_internal(app, None, placement, expanded, expanded, show_object_slot).await
 }
 
-pub(crate) async fn set_widget_window_expanded<R: Runtime>(
+pub(crate) async fn set_widget_window_expanded<R: Runtime + 'static>(
     app: &AppHandle<R>,
     expanded: bool,
     show_object_slot: bool,
@@ -57,12 +59,35 @@ pub(crate) async fn set_widget_window_expanded<R: Runtime>(
     apply_widget_layout_internal(app, None, placement, expanded, expanded, show_object_slot).await
 }
 
-pub(crate) fn close_widget_window<R: Runtime>(app: &AppHandle<R>) {
-    app.state::<WidgetWindowLifecycleState>().hide();
+pub(crate) fn close_widget_window<R: Runtime + 'static>(app: &AppHandle<R>) {
+    let hide_generation = app.state::<WidgetWindowLifecycleState>().hide();
     if let Some(window) = app.get_webview_window(WIDGET_WINDOW_LABEL) {
         emit_widget_runtime_collapsed(app);
         park_widget_window(&window);
+        schedule_widget_destroy_after_idle(app.clone(), hide_generation);
     }
+}
+
+fn schedule_widget_destroy_after_idle<R: Runtime + 'static>(
+    app: AppHandle<R>,
+    hide_generation: u64,
+) {
+    tauri::async_runtime::spawn(async move {
+        tokio::time::sleep(Duration::from_secs(WIDGET_DESTROY_AFTER_IDLE_SECS)).await;
+
+        let lifecycle = app.state::<WidgetWindowLifecycleState>();
+        if !lifecycle.should_destroy_hidden_window(hide_generation) {
+            return;
+        }
+
+        let Some(window) = app.get_webview_window(WIDGET_WINDOW_LABEL) else {
+            return;
+        };
+
+        if let Err(error) = window.destroy() {
+            eprintln!("[widget] failed to destroy idle widget window: {error}");
+        }
+    });
 }
 
 fn emit_widget_runtime_collapsed<R: Runtime>(app: &AppHandle<R>) {
@@ -120,7 +145,7 @@ fn apply_widget_bounds<R: Runtime>(
     Ok(())
 }
 
-async fn apply_widget_layout_internal<R: Runtime>(
+async fn apply_widget_layout_internal<R: Runtime + 'static>(
     app: &AppHandle<R>,
     preferred_monitor: Option<Monitor>,
     placement: WidgetPlacement,

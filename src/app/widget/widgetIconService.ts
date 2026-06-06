@@ -2,57 +2,67 @@ import { invoke } from "@tauri-apps/api/core";
 import { AppClassification } from "../../shared/classification/appClassification.ts";
 
 interface WidgetIconServiceDeps {
-  getIconMap: () => Promise<Record<string, string>>;
+  getIcon: (exeName: string) => Promise<string | null>;
 }
 
 const widgetIconServiceDeps: WidgetIconServiceDeps = {
-  getIconMap: loadWidgetIconMapFromRuntime,
+  getIcon: loadWidgetIconFromRuntime,
 };
 
-let iconMapCache: Record<string, string> | null = null;
-let iconMapPromise: Promise<Record<string, string>> | null = null;
+const MAX_WIDGET_ICON_CACHE_ENTRIES = 16;
+const iconCache = new Map<string, string | null>();
+const iconPromises = new Map<string, Promise<string | null>>();
 
-function expandIconMap(rawIcons: Record<string, string>): Record<string, string> {
-  const map: Record<string, string> = {};
-
-  for (const [rawExe, icon] of Object.entries(rawIcons)) {
-    const trimmedExe = rawExe.trim();
-    if (!trimmedExe) continue;
-
-    const normalizedExe = AppClassification.resolveCanonicalExecutable(trimmedExe);
-    const lowerExe = trimmedExe.toLowerCase();
-
-    map[trimmedExe] = icon;
-    map[lowerExe] = icon;
-    map[normalizedExe] = icon;
+function rememberIcon(key: string, icon: string | null) {
+  if (iconCache.has(key)) {
+    iconCache.delete(key);
   }
 
-  return map;
+  iconCache.set(key, icon);
+
+  while (iconCache.size > MAX_WIDGET_ICON_CACHE_ENTRIES) {
+    const oldestKey = iconCache.keys().next().value;
+    if (!oldestKey) {
+      break;
+    }
+    iconCache.delete(oldestKey);
+  }
 }
 
-async function loadWidgetIconMapFromRuntime(): Promise<Record<string, string>> {
-  const rawIcons = await invoke<Record<string, string>>("cmd_get_widget_icon_map");
-  return expandIconMap(rawIcons);
+async function loadWidgetIconFromRuntime(exeName: string): Promise<string | null> {
+  return invoke<string | null>("cmd_get_widget_icon", { exeName });
 }
 
-async function loadWidgetIconMap(deps: WidgetIconServiceDeps) {
-  if (iconMapCache) {
-    return iconMapCache;
+async function loadWidgetIcon(key: string, deps: WidgetIconServiceDeps) {
+  if (iconCache.has(key)) {
+    return iconCache.get(key) ?? null;
   }
 
-  if (!iconMapPromise) {
-    iconMapPromise = deps.getIconMap()
-      .then((icons) => {
-        iconMapCache = icons;
-        return icons;
-      })
-      .catch((error) => {
-        iconMapPromise = null;
-        throw error;
-      });
+  const existingPromise = iconPromises.get(key);
+  if (existingPromise) {
+    return existingPromise;
   }
 
-  return iconMapPromise;
+  const promise = deps.getIcon(key)
+    .then((icon) => {
+      rememberIcon(key, icon);
+      iconPromises.delete(key);
+      return icon;
+    })
+    .catch((error) => {
+      iconPromises.delete(key);
+      throw error;
+    });
+
+  iconPromises.set(key, promise);
+  return promise;
+}
+
+function resolveWidgetIconKey(objectIconKey: string) {
+  const trimmed = objectIconKey.trim();
+  return trimmed
+    ? AppClassification.resolveCanonicalExecutable(trimmed)
+    : null;
 }
 
 export async function loadWidgetObjectIconWithDeps(
@@ -63,8 +73,12 @@ export async function loadWidgetObjectIconWithDeps(
     return null;
   }
 
-  const icons = await loadWidgetIconMap(deps);
-  return icons[objectIconKey] ?? null;
+  const key = resolveWidgetIconKey(objectIconKey);
+  if (!key) {
+    return null;
+  }
+
+  return loadWidgetIcon(key, deps);
 }
 
 export async function loadWidgetObjectIcon(objectIconKey: string | null): Promise<string | null> {
@@ -72,6 +86,10 @@ export async function loadWidgetObjectIcon(objectIconKey: string | null): Promis
 }
 
 export function resetWidgetIconCacheForTests() {
-  iconMapCache = null;
-  iconMapPromise = null;
+  iconCache.clear();
+  iconPromises.clear();
+}
+
+export function getWidgetIconCacheSizeForTests() {
+  return iconCache.size;
 }

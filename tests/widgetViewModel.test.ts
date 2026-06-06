@@ -1,5 +1,6 @@
 import assert from "node:assert/strict";
 import {
+  getWidgetIconCacheSizeForTests,
   loadWidgetObjectIconWithDeps,
   resetWidgetIconCacheForTests,
 } from "../src/app/widget/widgetIconService.ts";
@@ -270,40 +271,38 @@ await runTest("isWidgetSelfWindow detects widget chrome without matching real ap
 await runTest("loadWidgetObjectIconWithDeps returns null for missing icon keys", async () => {
   resetWidgetIconCacheForTests();
   const icon = await loadWidgetObjectIconWithDeps("missing.exe", {
-    getIconMap: async () => ({ "chrome.exe": "chrome-icon" }),
+    getIcon: async () => null,
   });
 
   assert.equal(icon, null);
 });
 
-await runTest("loadWidgetObjectIconWithDeps reuses the icon map cache", async () => {
+await runTest("loadWidgetObjectIconWithDeps reuses cached icons per executable", async () => {
   resetWidgetIconCacheForTests();
   let loadCount = 0;
   const deps = {
-    getIconMap: async () => {
+    getIcon: async (exeName: string) => {
       loadCount += 1;
-      return {
-        "chrome.exe": "chrome-icon",
-        "cursor.exe": "cursor-icon",
-      };
+      return `${exeName}-icon`;
     },
   };
 
-  assert.equal(await loadWidgetObjectIconWithDeps("chrome.exe", deps), "chrome-icon");
-  assert.equal(await loadWidgetObjectIconWithDeps("cursor.exe", deps), "cursor-icon");
-  assert.equal(loadCount, 1);
+  assert.equal(await loadWidgetObjectIconWithDeps("chrome.exe", deps), "chrome.exe-icon");
+  assert.equal(await loadWidgetObjectIconWithDeps("Chrome.EXE", deps), "chrome.exe-icon");
+  assert.equal(await loadWidgetObjectIconWithDeps("cursor.exe", deps), "cursor.exe-icon");
+  assert.equal(loadCount, 2);
 });
 
-await runTest("loadWidgetObjectIconWithDeps retries after failed icon map load", async () => {
+await runTest("loadWidgetObjectIconWithDeps retries after failed icon load", async () => {
   resetWidgetIconCacheForTests();
   let loadCount = 0;
   const deps = {
-    getIconMap: async () => {
+    getIcon: async () => {
       loadCount += 1;
       if (loadCount === 1) {
         throw new Error("db busy");
       }
-      return { "chrome.exe": "chrome-icon" };
+      return "chrome-icon";
     },
   };
 
@@ -313,6 +312,22 @@ await runTest("loadWidgetObjectIconWithDeps retries after failed icon map load",
   );
   assert.equal(await loadWidgetObjectIconWithDeps("chrome.exe", deps), "chrome-icon");
   assert.equal(loadCount, 2);
+});
+
+await runTest("loadWidgetObjectIconWithDeps caps the widget icon cache", async () => {
+  resetWidgetIconCacheForTests();
+  const deps = {
+    getIcon: async (exeName: string) => `${exeName}-icon`,
+  };
+
+  for (let index = 0; index < 20; index += 1) {
+    assert.equal(
+      await loadWidgetObjectIconWithDeps(`app-${index}.exe`, deps),
+      `app-${index}.exe-icon`,
+    );
+  }
+
+  assert.equal(getWidgetIconCacheSizeForTests(), 16);
 });
 
 console.log(`Passed ${passed} widget view model tests`);

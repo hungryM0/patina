@@ -17,6 +17,14 @@ pub async fn cmd_get_widget_icon_map(app: AppHandle) -> Result<HashMap<String, S
 }
 
 #[tauri::command]
+pub async fn cmd_get_widget_icon(
+    exe_name: String,
+    app: AppHandle,
+) -> Result<Option<String>, String> {
+    icon_cache_service::load_icon_for_exe(&app, &exe_name).await
+}
+
+#[tauri::command]
 pub async fn cmd_set_widget_placement(
     side: WidgetSide,
     anchor_y: f64,

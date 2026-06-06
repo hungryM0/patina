@@ -77,6 +77,7 @@ fn register_invoke_handlers(builder: tauri::Builder<tauri::Wry>) -> tauri::Build
         commands::settings::cmd_commit_app_settings,
         commands::settings::cmd_commit_classification_settings,
         commands::widget::cmd_get_widget_icon_map,
+        commands::widget::cmd_get_widget_icon,
         commands::widget::cmd_get_widget_placement,
         commands::widget::cmd_set_widget_placement,
         commands::widget::cmd_apply_widget_layout,

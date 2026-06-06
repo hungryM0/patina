@@ -20,6 +20,24 @@ pub async fn fetch_icon_map(pool: &Pool<Sqlite>) -> Result<HashMap<String, Strin
     Ok(map)
 }
 
+pub async fn fetch_icon_for_exe(
+    pool: &Pool<Sqlite>,
+    exe_name: &str,
+) -> Result<Option<String>, String> {
+    let trimmed = exe_name.trim();
+    if trimmed.is_empty() {
+        return Ok(None);
+    }
+
+    let row = sqlx::query("SELECT icon_base64 FROM icon_cache WHERE exe_name = ? LIMIT 1")
+        .bind(trimmed)
+        .fetch_optional(pool)
+        .await
+        .map_err(|error| format!("failed to read icon cache entry: {error}"))?;
+
+    Ok(row.map(|row| row.get("icon_base64")))
+}
+
 pub async fn fetch_all_for_backup(pool: &Pool<Sqlite>) -> Result<Vec<BackupIconCache>, String> {
     let rows = sqlx::query("SELECT exe_name, icon_base64, last_updated FROM icon_cache")
         .fetch_all(pool)

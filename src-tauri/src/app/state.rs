@@ -92,6 +92,7 @@ pub(crate) struct WidgetWindowLifecycleState {
 struct WidgetWindowLifecycle {
     create_in_progress: bool,
     desired_visible: bool,
+    hide_generation: u64,
 }
 
 impl WidgetWindowLifecycleState {
@@ -99,10 +100,12 @@ impl WidgetWindowLifecycleState {
         match self.inner.lock() {
             Ok(mut guard) => {
                 guard.desired_visible = true;
+                guard.hide_generation = guard.hide_generation.wrapping_add(1);
             }
             Err(poisoned) => {
                 let mut guard = poisoned.into_inner();
                 guard.desired_visible = true;
+                guard.hide_generation = guard.hide_generation.wrapping_add(1);
             }
         }
     }
@@ -111,6 +114,7 @@ impl WidgetWindowLifecycleState {
         match self.inner.lock() {
             Ok(mut guard) => {
                 guard.desired_visible = true;
+                guard.hide_generation = guard.hide_generation.wrapping_add(1);
                 if guard.create_in_progress {
                     return false;
                 }
@@ -121,6 +125,7 @@ impl WidgetWindowLifecycleState {
             Err(poisoned) => {
                 let mut guard = poisoned.into_inner();
                 guard.desired_visible = true;
+                guard.hide_generation = guard.hide_generation.wrapping_add(1);
                 if guard.create_in_progress {
                     return false;
                 }
@@ -145,14 +150,34 @@ impl WidgetWindowLifecycleState {
         }
     }
 
-    pub(crate) fn hide(&self) {
+    pub(crate) fn hide(&self) -> u64 {
         match self.inner.lock() {
             Ok(mut guard) => {
                 guard.desired_visible = false;
+                guard.hide_generation = guard.hide_generation.wrapping_add(1);
+                guard.hide_generation
             }
             Err(poisoned) => {
                 let mut guard = poisoned.into_inner();
                 guard.desired_visible = false;
+                guard.hide_generation = guard.hide_generation.wrapping_add(1);
+                guard.hide_generation
+            }
+        }
+    }
+
+    pub(crate) fn should_destroy_hidden_window(&self, hide_generation: u64) -> bool {
+        match self.inner.lock() {
+            Ok(guard) => {
+                !guard.desired_visible
+                    && !guard.create_in_progress
+                    && guard.hide_generation == hide_generation
+            }
+            Err(poisoned) => {
+                let guard = poisoned.into_inner();
+                !guard.desired_visible
+                    && !guard.create_in_progress
+                    && guard.hide_generation == hide_generation
             }
         }
     }
@@ -177,9 +202,22 @@ mod tests {
         let state = WidgetWindowLifecycleState::default();
 
         assert!(state.begin_show());
-        state.hide();
+        let hide_generation = state.hide();
         assert!(!state.finish_show());
+        assert!(state.should_destroy_hidden_window(hide_generation));
         assert!(state.begin_show());
         assert!(state.finish_show());
+    }
+
+    #[test]
+    fn widget_lifecycle_cancels_stale_destroy_after_show() {
+        let state = WidgetWindowLifecycleState::default();
+
+        assert!(state.begin_show());
+        assert!(state.finish_show());
+        let hide_generation = state.hide();
+        state.show_existing();
+
+        assert!(!state.should_destroy_hidden_window(hide_generation));
     }
 }
