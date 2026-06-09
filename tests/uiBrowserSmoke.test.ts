@@ -901,6 +901,48 @@ try {
       "pomodoro default icon restores editable durations",
     );
     assert.equal(
+      await evaluate(client!, sessionId, `
+        (() => {
+          const dashboard = document.querySelector('[aria-label=' + ${jsonString(JSON.stringify("今天"))} + ']');
+          if (!dashboard) return false;
+          dashboard.click();
+          return true;
+        })()
+      `),
+      true,
+    );
+    await waitForExpression(
+      client!,
+      sessionId,
+      `document.querySelector('[aria-label=' + ${jsonString(JSON.stringify("今天"))} + ']')?.className.includes("qp-nav-item-active")`,
+    );
+    assert.equal(
+      await evaluate(client!, sessionId, `
+        (() => {
+          const tools = document.querySelector('[aria-label=' + ${jsonString(JSON.stringify("工具"))} + ']');
+          if (!tools) return false;
+          tools.click();
+          return true;
+        })()
+      `),
+      true,
+    );
+    await waitForExpression(
+      client!,
+      sessionId,
+      `
+        document.querySelector('[aria-label=' + ${jsonString(JSON.stringify(TOOLS_TEXT.pomodoroTitle))} + ']')
+          ?.getAttribute('aria-pressed') === 'true'
+      `,
+    );
+    assert.equal(
+      await evaluate(client!, sessionId, `
+        document.querySelector('[data-tools-section="pomodoro"]')?.className.includes('tools-section-pane-hidden') === false
+      `),
+      true,
+      "Tools section rail should restore the last selected section",
+    );
+    assert.equal(
       await evaluate(client!, sessionId, "document.querySelectorAll('.tools-section-tab-copy').length"),
       0,
       "Tools section rail should stay icon-only after switching sections",

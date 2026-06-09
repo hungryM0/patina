@@ -6,7 +6,9 @@ import { UI_TEXT, type UiText } from "../../../shared/copy/uiText.ts";
 import type { TimerMode } from "../../../shared/types/tools.ts";
 import { useToolsPageState } from "../hooks/useToolsPageState.ts";
 import {
+  readToolsSection,
   readToolsTimerMode,
+  rememberToolsSection,
   rememberToolsTimerMode,
 } from "../services/toolsLayoutPreferenceStorage.ts";
 import type { ToolsOpenTarget, ToolsSection } from "../types.ts";
@@ -15,13 +17,12 @@ import ReminderToolPanel from "./ReminderToolPanel.tsx";
 import TimerToolPanel from "./TimerToolPanel.tsx";
 
 interface ToolsProps {
-  initialTarget?: ToolsOpenTarget;
+  initialTarget?: ToolsOpenTarget | null;
   icons: Record<string, string>;
+  onInitialTargetConsumed?: () => void;
   onToast?: (message: string, tone?: QuietToastTone) => void;
   uiText?: UiText;
 }
-
-const DEFAULT_TOOLS_TARGET: ToolsOpenTarget = { section: "reminders" };
 
 function normalizeToolsSection(target: ToolsOpenTarget): ToolsSection {
   if (target.section === "timing") {
@@ -45,14 +46,17 @@ function addVisitedSection(current: ReadonlySet<ToolsSection>, section: ToolsSec
 }
 
 export default function Tools({
-  initialTarget = DEFAULT_TOOLS_TARGET,
+  initialTarget = null,
   icons,
+  onInitialTargetConsumed,
   onToast,
   uiText = UI_TEXT,
 }: ToolsProps) {
-  const [activeSection, setActiveSection] = useState<ToolsSection>(() => normalizeToolsSection(initialTarget));
+  const [activeSection, setActiveSection] = useState<ToolsSection>(() => (
+    initialTarget ? normalizeToolsSection(initialTarget) : readToolsSection()
+  ));
   const [visitedSections, setVisitedSections] = useState<ReadonlySet<ToolsSection>>(
-    () => new Set([normalizeToolsSection(initialTarget)]),
+    () => new Set([initialTarget ? normalizeToolsSection(initialTarget) : readToolsSection()]),
   );
   const [selectedTimerMode, setSelectedTimerMode] = useState<TimerMode>(readToolsTimerMode);
   const handleError = useCallback((message: string) => {
@@ -75,9 +79,12 @@ export default function Tools({
   }, []);
 
   useEffect(() => {
+    if (!initialTarget) return;
+
     const nextSection = normalizeToolsSection(initialTarget);
     setActiveSection(nextSection);
     setVisitedSections((current) => addVisitedSection(current, nextSection));
+    rememberToolsSection(nextSection);
     if (nextSection === "timer") {
       const nextTimerMode = resolveTimerMode(initialTarget);
       if (nextTimerMode) {
@@ -85,7 +92,8 @@ export default function Tools({
         rememberToolsTimerMode(nextTimerMode);
       }
     }
-  }, [initialTarget, resolveTimerMode]);
+    onInitialTargetConsumed?.();
+  }, [initialTarget, onInitialTargetConsumed, resolveTimerMode]);
 
   const handleTimerModeChange = useCallback((mode: TimerMode) => {
     setSelectedTimerMode(mode);
@@ -95,6 +103,7 @@ export default function Tools({
   const handleSectionChange = useCallback((section: ToolsSection) => {
     setActiveSection(section);
     setVisitedSections((current) => addVisitedSection(current, section));
+    rememberToolsSection(section);
   }, []);
 
   const sections = [

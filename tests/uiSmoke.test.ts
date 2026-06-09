@@ -413,9 +413,11 @@ await runTest("Tools participates in startup warmup and renders from cached runt
 });
 
 await runTest("Tools time inputs keep editable empty drafts until submit", () => {
+  const tools = readUtf8("src/features/tools/components/Tools.tsx");
   const reminder = readUtf8("src/features/tools/components/ReminderToolPanel.tsx");
   const timer = readUtf8("src/features/tools/components/TimerToolPanel.tsx");
   const pomodoro = readUtf8("src/features/tools/components/PomodoroToolPanel.tsx");
+  const shell = readUtf8("src/app/AppShell.tsx");
   const toolsStyles = readUtf8("src/styles/features/tools.css");
   const durationInput = readUtf8("src/features/tools/components/ToolDurationInput.tsx");
   const numberInput = readUtf8("src/features/tools/services/toolsNumberInput.ts");
@@ -454,6 +456,11 @@ await runTest("Tools time inputs keep editable empty drafts until submit", () =>
   assert.match(numberInput, /if \(!trimmed\) return null/);
   assert.match(numberInput, /if \(rounded < minMinutes \|\| rounded > maxMinutes\) return null/);
   assert.doesNotMatch(numberInput, /Math\.min\(maxMinutes, Math\.max\(minMinutes/);
+
+  assert.match(tools, /initialTarget \? normalizeToolsSection\(initialTarget\) : readToolsSection\(\)/);
+  assert.match(tools, /rememberToolsSection\(section\)/);
+  assert.match(shell, /const \[toolsInitialTarget, setToolsInitialTarget\] = useState<ToolsOpenTarget \| null>\(null\)/);
+  assert.match(shell, /if \(nextView === "tools"\) \{\s*setToolsInitialTarget\(null\);/);
 });
 
 await runTest("tools runtime avoids per-second snapshot broadcasts without state changes", () => {

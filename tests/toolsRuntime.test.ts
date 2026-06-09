@@ -28,9 +28,11 @@ import type { ObservedAppCandidate } from "../src/features/classification/types.
 import {
   readToolsReminderFormMode,
   readToolsReminderMode,
+  readToolsSection,
   readToolsTimerMode,
   rememberToolsReminderFormMode,
   rememberToolsReminderMode,
+  rememberToolsSection,
   rememberToolsTimerMode,
 } from "../src/features/tools/services/toolsLayoutPreferenceStorage.ts";
 import { createToolsRuntimeSnapshotStore } from "../src/features/tools/services/toolsRuntimeSnapshotStore.ts";
@@ -732,27 +734,33 @@ await runTest("tools status chip list keeps active statuses in arrival order", (
 });
 
 await runTest("tools segmented mode preferences persist locally", () => {
+  assert.equal(readToolsSection(), "reminders");
   assert.equal(readToolsReminderMode(), "event");
   assert.equal(readToolsTimerMode(), "stopwatch");
   assert.equal(readToolsReminderFormMode(), "relative");
 
   withWindowStorage(new MemoryStorage(), () => {
+    assert.equal(readToolsSection(), "reminders");
     assert.equal(readToolsReminderMode(), "event");
     assert.equal(readToolsTimerMode(), "stopwatch");
     assert.equal(readToolsReminderFormMode(), "relative");
 
+    rememberToolsSection("pomodoro");
     rememberToolsReminderMode("software");
     rememberToolsTimerMode("countdown");
     rememberToolsReminderFormMode("absolute");
 
+    assert.equal(readToolsSection(), "pomodoro");
     assert.equal(readToolsReminderMode(), "software");
     assert.equal(readToolsTimerMode(), "countdown");
     assert.equal(readToolsReminderFormMode(), "absolute");
 
+    window.localStorage.setItem("time-tracker:tools-section", "timing");
     window.localStorage.setItem("time-tracker:tools-reminder-mode", "timer");
     window.localStorage.setItem("time-tracker:tools-timer-mode", "timer");
     window.localStorage.setItem("time-tracker:tools-reminder-form-mode", "later");
 
+    assert.equal(readToolsSection(), "reminders");
     assert.equal(readToolsReminderMode(), "event");
     assert.equal(readToolsTimerMode(), "stopwatch");
     assert.equal(readToolsReminderFormMode(), "relative");

@@ -129,7 +129,7 @@ function AppShellContent() {
   ));
   const [isWindowForegroundLike, setIsWindowForegroundLike] = useState(true);
   const [historyDateRequest, setHistoryDateRequest] = useState<HistoryDateRequest | null>(null);
-  const [toolsInitialTarget, setToolsInitialTarget] = useState<ToolsOpenTarget>({ section: "reminders" });
+  const [toolsInitialTarget, setToolsInitialTarget] = useState<ToolsOpenTarget | null>(null);
   const backgroundEnteredAtMsRef = useRef<number | null>(null);
   const wasForegroundReadyRef = useRef<boolean | null>(null);
   const warmupRuntimeReadyResolveRef = useRef<(() => void) | null>(null);
@@ -194,6 +194,9 @@ function AppShellContent() {
     setToolsInitialTarget(target);
     void handleNavigate("tools");
   }, [handleNavigate]);
+  const handleToolsInitialTargetConsumed = useCallback(() => {
+    setToolsInitialTarget(null);
+  }, []);
 
   useEffect(() => {
     const controller = startStartupWarmup({
@@ -392,6 +395,9 @@ function AppShellContent() {
 
   const handleSidebarNavigate = useCallback((nextView: View) => {
     setHistoryDateRequest(null);
+    if (nextView === "tools") {
+      setToolsInitialTarget(null);
+    }
     void handleNavigate(nextView);
   }, [handleNavigate]);
 
@@ -465,6 +471,7 @@ function AppShellContent() {
                 <Tools
                   key="tools"
                   initialTarget={toolsInitialTarget}
+                  onInitialTargetConsumed={handleToolsInitialTargetConsumed}
                   icons={icons}
                   onToast={pushToast}
                   uiText={uiText}

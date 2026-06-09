@@ -1,6 +1,7 @@
 import type { TimerMode } from "../../../shared/types/tools.ts";
-import type { ReminderFormMode, ReminderMode } from "../types.ts";
+import type { ReminderFormMode, ReminderMode, ToolsSection } from "../types.ts";
 
+const TOOLS_SECTION_KEY = "time-tracker:tools-section";
 const TOOLS_TIMER_MODE_KEY = "time-tracker:tools-timer-mode";
 const TOOLS_REMINDER_MODE_KEY = "time-tracker:tools-reminder-mode";
 const TOOLS_REMINDER_FORM_MODE_KEY = "time-tracker:tools-reminder-form-mode";
@@ -41,12 +42,24 @@ function isTimerMode(value: string | null): value is TimerMode {
   return value === "stopwatch" || value === "countdown";
 }
 
+function isToolsSection(value: string | null): value is ToolsSection {
+  return value === "reminders" || value === "timer" || value === "pomodoro";
+}
+
 function isReminderMode(value: string | null): value is ReminderMode {
   return value === "event" || value === "software";
 }
 
 function isReminderFormMode(value: string | null): value is ReminderFormMode {
   return value === "relative" || value === "absolute";
+}
+
+export function readToolsSection(): ToolsSection {
+  return readStoredValue(TOOLS_SECTION_KEY, "reminders", isToolsSection);
+}
+
+export function rememberToolsSection(section: ToolsSection) {
+  rememberStoredValue(TOOLS_SECTION_KEY, section);
 }
 
 export function readToolsTimerMode(): TimerMode {
