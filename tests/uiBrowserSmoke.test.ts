@@ -710,11 +710,6 @@ try {
     await waitForExpression(
       client!,
       sessionId,
-      `document.body.innerText.includes(${jsonString(TOOLS_TEXT.softwareReminderSummaryLabel)})`,
-    );
-    await waitForExpression(
-      client!,
-      sessionId,
       `document.body.innerText.includes(${jsonString(TOOLS_TEXT.softwareReminderEmpty)})`,
     );
 

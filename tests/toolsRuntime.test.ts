@@ -5,6 +5,7 @@ import {
   buildSoftwareReminderRuleRows,
   buildTimerViewModel,
   buildToolsStatusChipViewModel,
+  buildToolsStatusChipViewModels,
 } from "../src/features/tools/services/toolsViewModel.ts";
 import { buildSoftwareReminderAppCandidates } from "../src/features/tools/services/softwareReminderAppCandidates.ts";
 import {
@@ -504,6 +505,46 @@ await runTest("tools status chip priority prefers pomodoro then timer then remin
   assert.equal(pomodoro?.targetSection, "pomodoro");
   assert.equal(pomodoro?.targetTimerMode, undefined);
   assert.match(pomodoro?.label ?? "", /^Focus/);
+});
+
+await runTest("tools status chip list keeps pomodoro timer and reminder visible together", () => {
+  const chips = buildToolsStatusChipViewModels(snapshot({
+    currentTimer: {
+      id: 1,
+      mode: "stopwatch",
+      label: null,
+      durationMs: null,
+      accumulatedMs: 0,
+      startedAt: 1_000_000,
+      pausedAt: null,
+      completedAt: null,
+      status: "running",
+      createdAt: 1_000_000,
+      updatedAt: 1_000_000,
+    },
+    currentPomodoro: {
+      id: 2,
+      phase: "focus",
+      status: "running",
+      cycleIndex: 1,
+      focusMs: 25 * 60_000,
+      shortBreakMs: 5 * 60_000,
+      longBreakMs: 15 * 60_000,
+      longBreakEvery: 4,
+      phaseStartedAt: 1_000_000,
+      phasePausedAt: null,
+      phaseRemainingMs: 25 * 60_000,
+      completedFocusCount: 0,
+      createdAt: 1_000_000,
+      updatedAt: 1_000_000,
+    },
+    nextReminderAt: 2_000_000,
+  }), 1_010_000, labels);
+
+  assert.deepEqual(
+    chips.map((chip) => chip.targetSection),
+    ["pomodoro", "timer", "reminders"],
+  );
 });
 
 await runTest("tools segmented mode preferences persist locally", () => {

@@ -158,9 +158,6 @@ function SoftwareReminderPanel({
   const [selectedSoftwareCandidate, setSelectedSoftwareCandidate] = useState<ToolSoftwareReminderAppCandidate | null>(null);
   const [candidateListStyle, setCandidateListStyle] = useState<CSSProperties | null>(null);
   const creating = busyAction === "create-software-reminder";
-  const summaryLabel = ruleRows.length > 0
-    ? UI_TEXT.tools.softwareReminderActiveCount(ruleRows.length)
-    : UI_TEXT.tools.noSoftwareReminderRule;
   const visibleCandidates = filterSoftwareCandidates(softwareName, candidates);
 
   const updateCandidateListPosition = useCallback(() => {
@@ -249,13 +246,6 @@ function SoftwareReminderPanel({
 
   return (
     <>
-      <div className="tools-reminder-summary qp-control">
-        <div>
-          <span>{UI_TEXT.tools.softwareReminderSummaryLabel}</span>
-          <strong>{summaryLabel}</strong>
-        </div>
-      </div>
-
       <div className="tools-subpanel">
         <div className="tools-subpanel-header tools-reminder-subpanel-header">
           <h3>{UI_TEXT.tools.newReminder}</h3>
@@ -427,7 +417,6 @@ export default function ReminderToolPanel({
   const [absoluteTime, setAbsoluteTime] = useState(() => toTimeInputValue(new Date()));
   const [validationMessage, setValidationMessage] = useState<string | null>(null);
   const scheduledRows = reminderRows.filter((row) => row.status === "scheduled");
-  const nextReminder = scheduledRows[0] ?? null;
   const creating = busyAction === "create-reminder";
   const reminderModes = [
     { value: "event" as const, label: UI_TEXT.tools.reminderModeEvent },
@@ -496,20 +485,6 @@ export default function ReminderToolPanel({
 
         {reminderMode === "event" ? (
           <>
-            <div className="tools-reminder-summary qp-control">
-              <div>
-                <span>{UI_TEXT.tools.nextReminder}</span>
-                {nextReminder ? (
-                  <strong className="tools-reminder-summary-line">
-                    <span className="tools-reminder-summary-label">{nextReminder.label}</span>
-                    <span className="tools-reminder-summary-date">{nextReminder.dueLabel}</span>
-                  </strong>
-                ) : (
-                  <strong>{UI_TEXT.tools.noNextReminder}</strong>
-                )}
-              </div>
-            </div>
-
             <div className="tools-subpanel">
               <div className="tools-subpanel-header tools-reminder-subpanel-header">
                 <h3>{UI_TEXT.tools.newReminder}</h3>

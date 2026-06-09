@@ -570,7 +570,7 @@ pub async fn skip_pomodoro_phase(
     date_key: &str,
     now_ms: i64,
 ) -> Result<Option<CompletedPomodoroNotification>, String> {
-    advance_pomodoro_phase(pool, date_key, now_ms, false).await
+    advance_pomodoro_phase(pool, date_key, now_ms, false, false).await
 }
 
 pub async fn complete_due_pomodoro_phase(
@@ -585,7 +585,7 @@ pub async fn complete_due_pomodoro_phase(
         return Ok(None);
     }
 
-    advance_pomodoro_phase(pool, date_key, now_ms, true).await
+    advance_pomodoro_phase(pool, date_key, now_ms, true, true).await
 }
 
 async fn advance_pomodoro_phase(
@@ -593,6 +593,7 @@ async fn advance_pomodoro_phase(
     date_key: &str,
     now_ms: i64,
     count_focus_completion: bool,
+    start_next_phase: bool,
 ) -> Result<Option<CompletedPomodoroNotification>, String> {
     let Some(run) = fetch_latest_pomodoro(pool).await? else {
         return Ok(None);
@@ -623,6 +624,14 @@ async fn advance_pomodoro_phase(
         PomodoroPhase::LongBreak => run.long_break_ms,
     };
 
+    let next_status = if start_next_phase {
+        PomodoroStatus::Running
+    } else {
+        PomodoroStatus::Paused
+    };
+    let next_started_at = start_next_phase.then_some(now_ms);
+    let next_paused_at = (!start_next_phase).then_some(now_ms);
+
     let mut tx = pool
         .begin()
         .await
@@ -632,7 +641,7 @@ async fn advance_pomodoro_phase(
          SET phase = ?,
              status = ?,
              cycle_index = ?,
-             phase_started_at = NULL,
+             phase_started_at = ?,
              phase_paused_at = ?,
              phase_remaining_ms = ?,
              completed_focus_count = ?,
@@ -640,9 +649,10 @@ async fn advance_pomodoro_phase(
          WHERE id = ?",
     )
     .bind(next_phase.as_str())
-    .bind(PomodoroStatus::Paused.as_str())
+    .bind(next_status.as_str())
     .bind(next_cycle_index)
-    .bind(now_ms)
+    .bind(next_started_at)
+    .bind(next_paused_at)
     .bind(next_remaining_ms)
     .bind(next_completed_focus_count)
     .bind(now_ms)
@@ -1668,7 +1678,56 @@ mod tests {
             assert_eq!(snapshot.today_completed_pomodoros, 1);
             let run = snapshot.current_pomodoro.unwrap();
             assert_eq!(run.phase, PomodoroPhase::ShortBreak);
+            assert_eq!(run.status, PomodoroStatus::Running);
+            assert_eq!(run.phase_started_at, Some(2_100));
+            assert_eq!(run.phase_paused_at, None);
+        });
+    }
+
+    #[test]
+    fn pause_then_resume_pomodoro_restarts_current_phase() {
+        tauri::async_runtime::block_on(async {
+            let pool = setup_test_db().await;
+            start_pomodoro(&pool, 1_000, 500, 700, 4, 1_000)
+                .await
+                .unwrap();
+
+            pause_pomodoro(&pool, 1_400).await.unwrap();
+            resume_pomodoro(&pool, 2_000).await.unwrap();
+
+            let snapshot = fetch_tools_snapshot(&pool, 2_000, "2026-06-07")
+                .await
+                .unwrap();
+            let run = snapshot.current_pomodoro.unwrap();
+            assert_eq!(run.phase, PomodoroPhase::Focus);
+            assert_eq!(run.status, PomodoroStatus::Running);
+            assert_eq!(run.phase_started_at, Some(2_000));
+            assert_eq!(run.phase_paused_at, None);
+            assert_eq!(run.phase_remaining_ms, Some(600));
+        });
+    }
+
+    #[test]
+    fn skip_pomodoro_phase_pauses_next_phase() {
+        tauri::async_runtime::block_on(async {
+            let pool = setup_test_db().await;
+            start_pomodoro(&pool, 1_000, 500, 700, 4, 1_000)
+                .await
+                .unwrap();
+
+            skip_pomodoro_phase(&pool, "2026-06-07", 1_500)
+                .await
+                .unwrap();
+            let snapshot = fetch_tools_snapshot(&pool, 1_500, "2026-06-07")
+                .await
+                .unwrap();
+
+            assert_eq!(snapshot.today_completed_pomodoros, 0);
+            let run = snapshot.current_pomodoro.unwrap();
+            assert_eq!(run.phase, PomodoroPhase::ShortBreak);
             assert_eq!(run.status, PomodoroStatus::Paused);
+            assert_eq!(run.phase_started_at, None);
+            assert_eq!(run.phase_paused_at, Some(1_500));
         });
     }
 

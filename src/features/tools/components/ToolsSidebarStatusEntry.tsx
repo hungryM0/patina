@@ -1,13 +1,20 @@
 import { useEffect, useMemo, useState } from "react";
+import { AlarmClock, BellRing, Timer } from "lucide-react";
 import type { ToolsRuntimeSnapshot } from "../../../shared/types/tools.ts";
 import { buildToolsViewModelLabels } from "../services/toolsLabels.ts";
 import { ToolsRuntimeService } from "../services/toolsRuntimeService.ts";
-import { buildToolsStatusChipViewModel } from "../services/toolsViewModel.ts";
-import type { ToolsOpenTarget } from "../types.ts";
+import { buildToolsStatusChipViewModels } from "../services/toolsViewModel.ts";
+import type { ToolStatusChipViewModel, ToolsOpenTarget } from "../types.ts";
 import ToolsStatusChip from "./ToolsStatusChip.tsx";
 
 interface ToolsSidebarStatusEntryProps {
   onOpenSection: (target: ToolsOpenTarget) => void;
+}
+
+function resolveStatusIcon(statusChip: ToolStatusChipViewModel) {
+  if (statusChip.targetSection === "pomodoro") return AlarmClock;
+  if (statusChip.targetSection === "timer") return Timer;
+  return BellRing;
 }
 
 export default function ToolsSidebarStatusEntry({
@@ -57,24 +64,31 @@ export default function ToolsSidebarStatusEntry({
     };
   }, []);
 
-  const statusChip = useMemo(() => (
+  const statusChips = useMemo(() => (
     snapshot
-      ? buildToolsStatusChipViewModel(snapshot, nowMs, buildToolsViewModelLabels())
-      : null
+      ? buildToolsStatusChipViewModels(snapshot, nowMs, buildToolsViewModelLabels())
+      : []
   ), [nowMs, snapshot]);
 
-  if (!statusChip) {
+  if (statusChips.length === 0) {
     return null;
   }
 
   return (
-    <ToolsStatusChip
-      label={statusChip.label}
-      onClick={() => onOpenSection({
-        section: statusChip.targetSection,
-        timerMode: statusChip.targetTimerMode,
-      })}
-      className="tools-status-chip-sidebar"
-    />
+    <div className="tools-status-chip-sidebar" role="group">
+      {statusChips.map((statusChip) => (
+        <ToolsStatusChip
+          key={`${statusChip.targetSection}:${statusChip.targetTimerMode ?? "default"}`}
+          label={statusChip.label}
+          icon={resolveStatusIcon(statusChip)}
+          onClick={() => onOpenSection({
+            section: statusChip.targetSection,
+            timerMode: statusChip.targetTimerMode,
+          })}
+          className="tools-status-chip-sidebar-item"
+          iconOnly
+        />
+      ))}
+    </div>
   );
 }

@@ -183,37 +183,47 @@ export function buildToolsStatusChipViewModel(
   nowMs: number,
   labels: ToolsViewModelLabels,
 ): ToolStatusChipViewModel | null {
+  return buildToolsStatusChipViewModels(snapshot, nowMs, labels)[0] ?? null;
+}
+
+export function buildToolsStatusChipViewModels(
+  snapshot: ToolsRuntimeSnapshot,
+  nowMs: number,
+  labels: ToolsViewModelLabels,
+): ToolStatusChipViewModel[] {
+  const chips: ToolStatusChipViewModel[] = [];
   const pomodoro = snapshot.currentPomodoro;
   if (pomodoro?.status === "running") {
     const phaseLabel = pomodoro.phase === "focus" ? labels.chipFocus : labels.chipBreak;
-    return {
+    chips.push({
       label: `${phaseLabel} ${formatCompactDuration(getPomodoroRemainingMs(pomodoro, nowMs))}`,
       targetSection: "pomodoro",
-    };
+    });
   }
 
   const timer = snapshot.currentTimer;
   if (timer?.status === "running") {
     if (timer.mode === "countdown") {
-      return {
+      chips.push({
         label: `${labels.chipCountdown} ${formatCompactDuration(getTimerRemainingMs(timer, nowMs))}`,
         targetSection: "timer",
         targetTimerMode: "countdown",
-      };
+      });
+    } else {
+      chips.push({
+        label: `${labels.chipStopwatch} ${formatCompactDuration(getTimerElapsedMs(timer, nowMs))}`,
+        targetSection: "timer",
+        targetTimerMode: "stopwatch",
+      });
     }
-    return {
-      label: `${labels.chipStopwatch} ${formatCompactDuration(getTimerElapsedMs(timer, nowMs))}`,
-      targetSection: "timer",
-      targetTimerMode: "stopwatch",
-    };
   }
 
   if (snapshot.nextReminderAt !== null) {
-    return {
+    chips.push({
       label: `${labels.chipReminder} ${formatReminderClock(snapshot.nextReminderAt)}`,
       targetSection: "reminders",
-    };
+    });
   }
 
-  return null;
+  return chips;
 }
