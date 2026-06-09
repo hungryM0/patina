@@ -5,6 +5,7 @@ import type { QuietToastTone } from "../../../shared/components/QuietToast";
 import QuietPageHeader from "../../../shared/components/QuietPageHeader";
 import type { UpdateSnapshot } from "../../../shared/types/update";
 import AboutPanel from "./AboutPanel";
+import AboutSupportDialog from "./AboutSupportDialog";
 import {
   getSettingsPageBootstrapCache,
   loadSettingsPageBootstrap,
@@ -38,6 +39,7 @@ export default function About({
   const initialVersion = updateSnapshot?.currentVersion ?? cachedBootstrap?.appVersion ?? "-";
   const [appVersion, setAppVersion] = useState(initialVersion);
   const [loading, setLoading] = useState(!updateSnapshot?.currentVersion && !cachedBootstrap?.appVersion);
+  const [supportDialogOpen, setSupportDialogOpen] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
@@ -74,6 +76,15 @@ export default function About({
     }
   }, [notify]);
 
+  const handleOpenRepository = useCallback(async () => {
+    try {
+      await SettingsRuntimeAdapterService.openRepository();
+    } catch (error) {
+      console.error("open repository link failed", error);
+      notify(UI_TEXT.toast.repositoryOpenFailed, "warning");
+    }
+  }, [notify]);
+
   const handleOpenFeedback = useCallback(async () => {
     try {
       await SettingsRuntimeAdapterService.openFeedback();
@@ -83,11 +94,11 @@ export default function About({
     }
   }, [notify]);
 
-  const handleOpenSupportReadme = useCallback(async () => {
+  const handleOpenKofiSupport = useCallback(async () => {
     try {
-      await SettingsRuntimeAdapterService.openSupportReadme();
+      await SettingsRuntimeAdapterService.openKofiSupport();
     } catch (error) {
-      console.error("open support readme link failed", error);
+      console.error("open Ko-fi support link failed", error);
       notify(UI_TEXT.toast.supportOpenFailed, "warning");
     }
   }, [notify]);
@@ -146,14 +157,25 @@ export default function About({
           onOpenReleaseNotes={() => {
             void handleOpenReleaseNotes();
           }}
+          onOpenRepository={() => {
+            void handleOpenRepository();
+          }}
           onOpenFeedback={() => {
             void handleOpenFeedback();
           }}
-          onOpenSupportReadme={() => {
-            void handleOpenSupportReadme();
+          onOpenSupportDialog={() => {
+            setSupportDialogOpen(true);
           }}
         />
       </div>
+
+      <AboutSupportDialog
+        open={supportDialogOpen}
+        onClose={() => setSupportDialogOpen(false)}
+        onOpenKofi={() => {
+          void handleOpenKofiSupport();
+        }}
+      />
     </div>
   );
 }

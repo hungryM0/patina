@@ -1,5 +1,10 @@
-import { Info } from "lucide-react";
-import QuietSubpanel from "../../../shared/components/QuietSubpanel";
+import {
+  FileText,
+  Heart,
+  MessageCircle,
+} from "lucide-react";
+import type { ReactNode } from "react";
+import appIconUrl from "../../../../src-tauri/icons/icon.png";
 import type { UpdateSnapshot } from "../../../shared/types/update";
 import UpdateStatusPanel from "../../update/components/UpdateStatusPanel";
 import { UI_TEXT } from "../../../shared/copy/uiText.ts";
@@ -15,9 +20,37 @@ type AboutPanelProps = {
   onOpenUpdateReleasePage?: () => void;
   onOpenUpdateDownload?: () => void;
   onOpenReleaseNotes: () => void;
+  onOpenRepository: () => void;
   onOpenFeedback: () => void;
-  onOpenSupportReadme: () => void;
+  onOpenSupportDialog: () => void;
 };
+
+type AboutLinkButtonProps = {
+  icon: ReactNode;
+  label: string;
+  accent?: "default" | "support";
+  onClick: () => void;
+};
+
+function AboutLinkButton({
+  icon,
+  label,
+  accent = "default",
+  onClick,
+}: AboutLinkButtonProps) {
+  return (
+    <button
+      type="button"
+      className={`about-pill-action about-pill-action-${accent}`}
+      onClick={onClick}
+    >
+      <span className="about-pill-icon" aria-hidden>
+        {icon}
+      </span>
+      <span className="about-pill-label">{label}</span>
+    </button>
+  );
+}
 
 export default function AboutPanel({
   appVersion,
@@ -30,44 +63,65 @@ export default function AboutPanel({
   onOpenUpdateReleasePage,
   onOpenUpdateDownload,
   onOpenReleaseNotes,
+  onOpenRepository,
   onOpenFeedback,
-  onOpenSupportReadme,
+  onOpenSupportDialog,
 }: AboutPanelProps) {
   return (
-    <section className="qp-panel p-5 md:p-6">
-      <div className="flex items-center gap-2.5 pb-2 border-b border-[var(--qp-border-subtle)] mb-5">
-        <Info size={16} className="text-[var(--qp-accent-default)]" />
-        <h2 className="text-sm font-semibold text-[var(--qp-text-primary)]">{UI_TEXT.about.sectionTitle}</h2>
-      </div>
-
-      <QuietSubpanel>
-        <div className="flex items-start justify-between gap-4">
-          <div className="min-w-0">
-            <p className="text-sm font-semibold text-[var(--qp-text-primary)]">{UI_TEXT.about.appInfo}</p>
-            <p className="mt-1 text-sm text-[var(--qp-text-secondary)]">
-              {UI_TEXT.about.currentVersion(appVersion)}
-            </p>
-            <p className="mt-0.5 text-xs text-[var(--qp-text-tertiary)]">
-              {UI_TEXT.about.description}
-            </p>
+    <div className="about-center-workbench">
+      <section className="qp-panel about-center-panel">
+        <div className="about-center-profile">
+          <div className="about-center-icon-shell" aria-hidden>
+            <img src={appIconUrl} alt="" draggable={false} />
           </div>
+          <div className="about-center-title-row">
+            <h2>Time Tracker</h2>
+            <span className="about-center-version-chip">{`v${appVersion}`}</span>
+          </div>
+          <p>{UI_TEXT.about.description}</p>
         </div>
-        <div className="mt-4">
-          <UpdateStatusPanel
-            snapshot={effectiveUpdateSnapshot}
-            checking={updateChecking}
-            installing={updateInstalling}
-            suppressProgress={updateDialogOpen}
-            onCheckUpdates={() => onCheckForUpdates?.()}
-            onOpenConfirmDialog={() => onOpenUpdateDialog?.()}
-            onOpenUpdateReleasePage={() => onOpenUpdateReleasePage?.()}
-            onOpenUpdateDownload={() => onOpenUpdateDownload?.()}
-            onOpenReleaseNotes={onOpenReleaseNotes}
-            onOpenFeedback={onOpenFeedback}
-            onOpenSupportReadme={onOpenSupportReadme}
+
+        <div className="about-pill-row">
+          <AboutLinkButton
+            icon={<span className="about-github-mark" />}
+            label="GitHub Star"
+            onClick={onOpenRepository}
+          />
+          <AboutLinkButton
+            icon={<FileText size={14} />}
+            label={UI_TEXT.update.releaseNotes}
+            onClick={onOpenReleaseNotes}
+          />
+          <AboutLinkButton
+            icon={<MessageCircle size={14} />}
+            label={UI_TEXT.update.feedback}
+            onClick={onOpenFeedback}
+          />
+          <AboutLinkButton
+            icon={<Heart size={14} />}
+            label={UI_TEXT.update.support}
+            accent="support"
+            onClick={onOpenSupportDialog}
           />
         </div>
-      </QuietSubpanel>
-    </section>
+
+        <UpdateStatusPanel
+          className="about-center-update"
+          variant="compact"
+          snapshot={effectiveUpdateSnapshot}
+          checking={updateChecking}
+          installing={updateInstalling}
+          suppressProgress={updateDialogOpen}
+          showSupportLinks={false}
+          onCheckUpdates={() => onCheckForUpdates?.()}
+          onOpenConfirmDialog={() => onOpenUpdateDialog?.()}
+          onOpenUpdateReleasePage={() => onOpenUpdateReleasePage?.()}
+          onOpenUpdateDownload={() => onOpenUpdateDownload?.()}
+          onOpenReleaseNotes={onOpenReleaseNotes}
+          onOpenFeedback={onOpenFeedback}
+          onOpenSupportReadme={onOpenSupportDialog}
+        />
+      </section>
+    </div>
   );
 }

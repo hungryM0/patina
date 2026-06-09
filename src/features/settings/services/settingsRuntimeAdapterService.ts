@@ -56,7 +56,9 @@ type PrepareBackupRestoreDeps = {
 };
 
 const RELEASE_NOTES_URL = "https://github.com/Ceceliaee/time-tracking/releases";
+const REPOSITORY_URL = "https://github.com/Ceceliaee/time-tracking";
 const FEEDBACK_URL = "https://github.com/Ceceliaee/time-tracking/issues/new/choose";
+const KOFI_SUPPORT_URL = "https://ko-fi.com/ceceliaee";
 const SUPPORT_README_URLS = {
   "zh-CN": "https://github.com/Ceceliaee/time-tracking/blob/main/README.zh-CN.md#support",
   "en-US": "https://github.com/Ceceliaee/time-tracking/blob/main/README.md#support",
@@ -161,8 +163,16 @@ export class SettingsRuntimeAdapterService {
     await openExternalUrl(RELEASE_NOTES_URL);
   }
 
+  static async openRepository(): Promise<void> {
+    await openExternalUrl(REPOSITORY_URL);
+  }
+
   static async openFeedback(): Promise<void> {
     await openExternalUrl(FEEDBACK_URL);
+  }
+
+  static async openKofiSupport(): Promise<void> {
+    await openExternalUrl(KOFI_SUPPORT_URL);
   }
 
   static async openSupportReadme(): Promise<void> {

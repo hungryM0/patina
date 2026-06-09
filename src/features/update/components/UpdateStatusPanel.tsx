@@ -12,6 +12,9 @@ interface UpdateStatusPanelProps {
   checking: boolean;
   installing: boolean;
   suppressProgress?: boolean;
+  showSupportLinks?: boolean;
+  variant?: "default" | "compact";
+  className?: string;
   onCheckUpdates: () => void;
   onOpenConfirmDialog: () => void;
   onOpenUpdateReleasePage: () => void;
@@ -35,6 +38,9 @@ export default function UpdateStatusPanel({
   checking,
   installing,
   suppressProgress = false,
+  showSupportLinks = true,
+  variant = "default",
+  className,
   onCheckUpdates,
   onOpenConfirmDialog,
   onOpenUpdateReleasePage,
@@ -63,8 +69,57 @@ export default function UpdateStatusPanel({
     }
   };
 
+  const actions = (
+    <div className="flex flex-wrap items-center justify-end gap-2">
+      {viewModel.secondaryAction ? (
+        <button
+          type="button"
+          onClick={() => handleAction(viewModel.secondaryAction!)}
+          disabled={viewModel.secondaryAction.disabled}
+          className="qp-button-secondary inline-flex min-h-[34px] items-center gap-1.5 rounded-[8px] px-3 py-2 text-xs font-semibold disabled:cursor-not-allowed disabled:opacity-50"
+        >
+          {renderActionLabel(viewModel.secondaryAction)}
+        </button>
+      ) : null}
+      <button
+        type="button"
+        onClick={() => handleAction(viewModel.primaryAction)}
+        disabled={viewModel.primaryAction.disabled}
+        className="qp-button-primary inline-flex min-h-[34px] items-center gap-1.5 rounded-[8px] px-3 py-2 text-xs font-semibold disabled:cursor-not-allowed disabled:opacity-50"
+      >
+        {renderActionLabel(viewModel.primaryAction)}
+      </button>
+    </div>
+  );
+
+  if (variant === "compact") {
+    return (
+      <div className={`qp-subpanel update-status-compact ${className ?? ""}`.trim()}>
+        <div className="update-status-compact-main">
+          <div className="update-status-compact-copy">
+            <p className="update-status-compact-title">{UI_TEXT.update.appUpdate}</p>
+            <p className="update-status-compact-state">{viewModel.statusTitle}</p>
+            {viewModel.statusDetail ? (
+              <p className="update-status-compact-detail">{viewModel.statusDetail}</p>
+            ) : null}
+          </div>
+          {actions}
+        </div>
+        {viewModel.progress && !suppressProgress ? (
+          <UpdateProgressBar
+            className="mt-3"
+            percent={viewModel.progress.percent}
+            label={viewModel.progress.label}
+            valueText={viewModel.progress.valueText}
+            indeterminate={viewModel.progress.indeterminate}
+          />
+        ) : null}
+      </div>
+    );
+  }
+
   return (
-    <div className="qp-subpanel">
+    <div className={`qp-subpanel ${className ?? ""}`.trim()}>
       <p className="text-sm font-semibold text-[var(--qp-text-primary)]">{UI_TEXT.update.appUpdate}</p>
       <p className="mt-2 text-sm font-semibold text-[var(--qp-text-primary)]">{viewModel.statusTitle}</p>
       {viewModel.statusDetail ? (
@@ -82,52 +137,35 @@ export default function UpdateStatusPanel({
         />
       ) : null}
 
-      <div className="mt-4 flex flex-wrap items-end justify-between gap-3">
-        <div className="flex items-center gap-1.5 text-xs text-[var(--qp-text-tertiary)]">
-          <button
-            type="button"
-            onClick={onOpenReleaseNotes}
-            className="text-xs text-[var(--qp-text-tertiary)] hover:text-[var(--qp-text-secondary)]"
-          >
-            {UI_TEXT.update.releaseNotes}
-          </button>
-          <span aria-hidden>·</span>
-          <button
-            type="button"
-            onClick={onOpenFeedback}
-            className="text-xs text-[var(--qp-text-tertiary)] hover:text-[var(--qp-text-secondary)]"
-          >
-            {UI_TEXT.update.feedback}
-          </button>
-          <span aria-hidden>·</span>
-          <button
-            type="button"
-            onClick={onOpenSupportReadme}
-            className="text-xs text-[var(--qp-text-tertiary)] hover:text-[var(--qp-text-secondary)]"
-          >
-            {UI_TEXT.update.support}
-          </button>
-        </div>
-        <div className="flex flex-wrap items-center justify-end gap-2">
-          {viewModel.secondaryAction ? (
+      <div className={`mt-4 flex flex-wrap items-end gap-3 ${showSupportLinks ? "justify-between" : "justify-end"}`}>
+        {showSupportLinks ? (
+          <div className="flex items-center gap-1.5 text-xs text-[var(--qp-text-tertiary)]">
             <button
               type="button"
-              onClick={() => handleAction(viewModel.secondaryAction!)}
-              disabled={viewModel.secondaryAction.disabled}
-              className="qp-button-secondary inline-flex min-h-[34px] items-center gap-1.5 rounded-[8px] px-3 py-2 text-xs font-semibold disabled:cursor-not-allowed disabled:opacity-50"
+              onClick={onOpenReleaseNotes}
+              className="text-xs text-[var(--qp-text-tertiary)] hover:text-[var(--qp-text-secondary)]"
             >
-              {renderActionLabel(viewModel.secondaryAction)}
+              {UI_TEXT.update.releaseNotes}
             </button>
-          ) : null}
-          <button
-            type="button"
-            onClick={() => handleAction(viewModel.primaryAction)}
-            disabled={viewModel.primaryAction.disabled}
-            className="qp-button-primary inline-flex min-h-[34px] items-center gap-1.5 rounded-[8px] px-3 py-2 text-xs font-semibold disabled:cursor-not-allowed disabled:opacity-50"
-          >
-            {renderActionLabel(viewModel.primaryAction)}
-          </button>
-        </div>
+            <span aria-hidden>·</span>
+            <button
+              type="button"
+              onClick={onOpenFeedback}
+              className="text-xs text-[var(--qp-text-tertiary)] hover:text-[var(--qp-text-secondary)]"
+            >
+              {UI_TEXT.update.feedback}
+            </button>
+            <span aria-hidden>·</span>
+            <button
+              type="button"
+              onClick={onOpenSupportReadme}
+              className="text-xs text-[var(--qp-text-tertiary)] hover:text-[var(--qp-text-secondary)]"
+            >
+              {UI_TEXT.update.support}
+            </button>
+          </div>
+        ) : null}
+        {actions}
       </div>
     </div>
   );
