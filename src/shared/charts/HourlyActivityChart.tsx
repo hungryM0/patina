@@ -35,6 +35,20 @@ const BAR_TOP_RADIUS: [number, number, number, number] = [3, 3, 0, 0];
 const COMPACT_CATEGORY_LIMIT = 4;
 const EXPANDED_CATEGORY_LIMIT = 6;
 const EXPANDED_CATEGORY_WIDTH = 400;
+const X_AXIS_HEIGHT = 30;
+
+function readRenderedBarBaseline(chart: HTMLDivElement) {
+  const barShapes = Array.from(chart.querySelectorAll<SVGPathElement>(".recharts-rectangle"));
+  const baselines = barShapes
+    .map((shape) => {
+      const y = Number(shape.getAttribute("y"));
+      const height = Number(shape.getAttribute("height"));
+      return Number.isFinite(y) && Number.isFinite(height) ? y + height : undefined;
+    })
+    .filter((value): value is number => value !== undefined);
+
+  return baselines.length > 0 ? Math.max(...baselines) : undefined;
+}
 
 function renderStackedBarShape(
   dataKey: string,
@@ -69,6 +83,7 @@ export default function HourlyActivityChart({
 }: Props) {
   const chartRef = useRef<HTMLDivElement | null>(null);
   const [visibleCategoryLimit, setVisibleCategoryLimit] = useState(COMPACT_CATEGORY_LIMIT);
+  const [tooltipBottomY, setTooltipBottomY] = useState<number | undefined>();
   const categoryMode = mode === "category";
   const visibleHourlyCategoryActivity = useMemo(
     () => limitHourlyCategoryActivity(hourlyCategoryActivity, visibleCategoryLimit),
@@ -91,20 +106,38 @@ export default function HourlyActivityChart({
   useEffect(() => {
     const chart = chartRef.current;
     if (!chart) return;
+    let frameId: number | undefined;
 
-    const updateLimit = (width: number) => {
+    const updateTooltipBottom = (height: number) => {
+      const renderedBaseline = readRenderedBarBaseline(chart);
+      const fallbackBaseline = height - X_AXIS_HEIGHT - margin.bottom;
+      setTooltipBottomY(Math.round(renderedBaseline ?? fallbackBaseline));
+    };
+
+    const updateLayout = (width: number, height: number) => {
       setVisibleCategoryLimit(width >= EXPANDED_CATEGORY_WIDTH
         ? EXPANDED_CATEGORY_LIMIT
         : COMPACT_CATEGORY_LIMIT);
+
+      if (height > 0) {
+        updateTooltipBottom(height);
+        frameId = requestAnimationFrame(() => updateTooltipBottom(height));
+      }
     };
 
-    updateLimit(chart.getBoundingClientRect().width);
+    const rect = chart.getBoundingClientRect();
+    updateLayout(rect.width, rect.height);
     const observer = new ResizeObserver(([entry]) => {
-      updateLimit(entry.contentRect.width);
+      updateLayout(entry.contentRect.width, entry.contentRect.height);
     });
     observer.observe(chart);
-    return () => observer.disconnect();
-  }, []);
+    return () => {
+      if (frameId !== undefined) {
+        cancelAnimationFrame(frameId);
+      }
+      observer.disconnect();
+    };
+  }, [chartData, margin.bottom]);
 
   return (
     <div ref={chartRef} className="h-full w-full">
@@ -116,6 +149,7 @@ export default function HourlyActivityChart({
           axisLine={false}
           tickLine={false}
           tickMargin={8}
+          height={X_AXIS_HEIGHT}
           interval={5}
           padding={padding}
         />
@@ -124,6 +158,8 @@ export default function HourlyActivityChart({
           cursor={{ fill: "var(--qp-chart-cursor)" }}
           filterZeroValues={categoryMode}
           reverseItems={categoryMode}
+          verticalPlacement={categoryMode ? "fixed-bottom" : "default"}
+          fixedBottomY={categoryMode ? tooltipBottomY : undefined}
           colorFormatter={(item) => categoryMode ? getTooltipSegment(item)?.color : undefined}
           labelFormatter={(label, payload) => {
             if (!categoryMode) return label;

@@ -34,6 +34,8 @@ interface Props {
   colorFormatter?: TooltipColorFormatter;
   filterZeroValues?: boolean;
   reverseItems?: boolean;
+  verticalPlacement?: "default" | "fixed-bottom";
+  fixedBottomY?: number;
 }
 
 function formatTooltipItem(
@@ -79,10 +81,15 @@ export default function QuietChartTooltip({
   colorFormatter,
   filterZeroValues = false,
   reverseItems = false,
+  verticalPlacement = "default",
+  fixedBottomY,
 }: Props) {
+  const useFixedBottom = verticalPlacement === "fixed-bottom" && fixedBottomY !== undefined;
+
   return (
     <Tooltip
       cursor={cursor as never}
+      position={useFixedBottom ? { y: fixedBottomY } : undefined}
       content={(contentProps) => {
         const { active, payload, label } = contentProps as {
           active?: boolean;
@@ -102,7 +109,7 @@ export default function QuietChartTooltip({
         const resolvedLabel = resolveTooltipLabel(label, orderedPayload, labelFormatter);
 
         return (
-          <div className="qp-chart-tooltip">
+          <div className={`qp-chart-tooltip${useFixedBottom ? " qp-chart-tooltip-fixed-bottom" : ""}`}>
             {resolvedLabel ? (
               <div className="qp-chart-tooltip-label">{resolvedLabel}</div>
             ) : null}

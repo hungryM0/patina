@@ -218,6 +218,11 @@
   color: var(--qp-text-primary);
 }
 
+.qp-chart-tooltip-fixed-bottom {
+  transform: translateY(-100%);
+  transform-origin: left bottom;
+}
+
 .qp-chart-tooltip-label {
   margin-bottom: 6px;
   font-size: 10px;
