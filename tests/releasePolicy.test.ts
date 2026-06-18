@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import {
   buildUpdaterEndpoints,
   fieldValue,
+  renderReleaseNotes,
   readVersionPolicyCurrentCodeVersion,
   renderUpdaterNotes,
   syncVersionPolicyCurrentCodeVersion,
@@ -135,6 +136,16 @@ function testUpdaterEndpointsKeepGithubFirstAndPreserveMirrors() {
   ]);
 }
 
+function testReleaseNotesIncludeAllVisibleBullets() {
+  const notes = renderReleaseNotes({
+    release: "Ready.",
+    bullets: Array.from({ length: 8 }, (_, index) => `- Change ${index + 1}`),
+  });
+
+  assert.match(notes, /- Change 7/);
+  assert.match(notes, /- Change 8/);
+}
+
 function testVersionFilesValidationPassesWhenAllVersionsMatch() {
   assert.deepEqual(validateReleaseVersionFilesText(versionFileFixture(), "1.6.0"), []);
 }
@@ -223,6 +234,7 @@ testStalePolicyVersionFailsValidation();
 testUpdaterNotesKeepLocalizedVariants();
 testUpdaterNotesFallsBackToAppNote();
 testUpdaterEndpointsKeepGithubFirstAndPreserveMirrors();
+testReleaseNotesIncludeAllVisibleBullets();
 testVersionFilesValidationPassesWhenAllVersionsMatch();
 testVersionFilesValidationCatchesPackageJsonMismatch();
 testVersionFilesValidationCatchesPackageLockRootMismatch();
@@ -232,4 +244,4 @@ testVersionFilesValidationCatchesPolicyMismatch();
 testVersionFilesValidationCatchesMissingChangelogSection();
 testVersionFilesValidationRejectsInvalidVersion();
 
-console.log("Passed 15 release policy tests");
+console.log("Passed 16 release policy tests");

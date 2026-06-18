@@ -464,8 +464,8 @@ async function validateVersionPolicyCurrentCodeVersion(version) {
   }
 }
 
-function renderReleaseNotes(parsed) {
-  const visibleBullets = parsed.bullets.slice(0, 6);
+export function renderReleaseNotes(parsed) {
+  const visibleBullets = parsed.bullets;
   const lines = [parsed.release, ""];
 
   if (visibleBullets.length > 0) {
