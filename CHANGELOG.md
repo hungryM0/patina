@@ -18,6 +18,32 @@ App note en: TBD.
 
 ### Added
 
+- 暂无。
+
+### Changed
+
+- 暂无。
+
+### Fixed
+
+- 暂无。
+
+### Removed
+
+- 暂无。
+
+### Internal
+
+- 暂无。
+
+## [1.7.0] - 2026-06-18
+
+Release: 新增可选网页记录，并改进分类、历史回看和数据热力图。
+App note: 新增网页记录，并改进分类、历史回看和数据热力图。
+App note en: Adds optional web activity recording and improves classification, History, and Data heatmaps.
+
+### Added
+
 - 新增可选网页记录第一版：可通过 Chrome / Chromium 插件把前台网页的域名、标题与时间写入 Patina，历史页支持网页排行与网页时间线详情。Refs [#6](https://github.com/Ceceliaee/patina/issues/6)
 - 新增网页记录设置、浏览器插件 token 鉴权与 Chrome MV3 插件源码；网页记录仅保存域名、标题与 favicon。
 
