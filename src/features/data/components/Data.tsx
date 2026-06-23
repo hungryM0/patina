@@ -1,5 +1,5 @@
-import { type CSSProperties, type MouseEvent, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
-import { BarChart3, CalendarDays, ChevronLeft, ChevronRight, Clock3, Search } from "lucide-react";
+import { type MouseEvent, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
+import { BarChart3, Search } from "lucide-react";
 import { Area, AreaChart, CartesianGrid, ResponsiveContainer, XAxis, YAxis } from "recharts";
 import { UI_TEXT } from "../../../shared/copy/uiText.ts";
 import type { AppLanguage } from "../../../shared/settings/appSettings.ts";
@@ -14,7 +14,6 @@ import {
   type DataAppTrendViewModel,
   type DataTrendViewModel,
   type AggregateSessionRecord,
-  type HeatmapWeek,
   type HeatmapSelection,
   loadDataHeatmapSnapshot,
 } from "../services/dataReadModel.ts";
@@ -27,8 +26,6 @@ import {
 import { prewarmDataFirstScreen } from "../services/dataFirstScreenPrewarm.ts";
 import QuietChartTooltip from "../../../shared/components/QuietChartTooltip";
 import QuietPageHeader from "../../../shared/components/QuietPageHeader";
-import QuietSegmentedFilter from "../../../shared/components/QuietSegmentedFilter";
-import QuietTooltip from "../../../shared/components/QuietTooltip";
 import type { TrackerHealthSnapshot } from "../../../shared/types/tracking";
 import {
   formatChartHours,
@@ -39,6 +36,8 @@ import type { DataTrendSnapshot } from "../services/dataTrendSnapshot.ts";
 import type { DataTrendRangeSelection } from "../services/dataTrendRange.ts";
 import { useDataTrendSnapshot } from "../hooks/useDataTrendSnapshot.ts";
 import DataTrendRangeControl from "./DataTrendRangeControl.tsx";
+import DataTrendPanel from "./DataTrendPanel.tsx";
+import DataHeatmapPanel, { type HeatmapGranularity } from "./DataHeatmapPanel.tsx";
 
 interface Props {
   icons: Record<string, string>;
@@ -92,10 +91,8 @@ function filterDataAppOptionsForQuery(options: DataAppOption[], query: string) {
 }
 
 const DATA_TREND_X_AXIS_MIN_TICK_GAP = 24;
-const HEATMAP_WEEKDAY_COUNT = 7;
 type DataChartDimension = { width: number; height: number };
 type DataChartDimensionKey = "overviewTrend" | "appTrend";
-type HeatmapGranularity = "daily" | "weekly";
 const dataChartDimensionCache: Partial<Record<DataChartDimensionKey, DataChartDimension>> = {};
 const useIsomorphicLayoutEffect = typeof window === "undefined" ? useEffect : useLayoutEffect;
 
@@ -120,48 +117,6 @@ function getOverviewTrendChartInitialDimension(): DataChartDimension {
   const height = viewport.width >= 1536 && viewport.height >= 900 ? 214 : viewport.width <= 900 ? 140 : 168;
 
   return { width, height };
-}
-
-function formatHeatmapShortDate(dateKey: string) {
-  return dateKey.slice(5).replace("-", "/");
-}
-
-function buildWeeklyHeatmapCells(rows: HeatmapWeek[]) {
-  const weeklyCells = rows.map((week) => {
-    const inRangeCells = week.cells.filter((cell) => !cell.isOutsideYear);
-    const visibleCells = inRangeCells.filter((cell) => !cell.isFuture);
-    const duration = visibleCells.reduce((total, cell) => total + cell.duration, 0);
-    const labelCells = visibleCells.length > 0
-      ? visibleCells
-      : inRangeCells.length > 0
-        ? inRangeCells
-        : week.cells;
-    const firstCell = labelCells[0];
-    const lastCell = labelCells[labelCells.length - 1];
-    const dateLabel = firstCell && lastCell
-      ? `${formatHeatmapShortDate(firstCell.date)} - ${formatHeatmapShortDate(lastCell.date)}`
-      : week.key;
-    const isOutsideYear = inRangeCells.length === 0;
-    const isFuture = !isOutsideYear && visibleCells.length === 0;
-
-    return {
-      key: week.key,
-      duration,
-      intensity: 0,
-      isFuture,
-      isOutsideYear,
-      label: `${dateLabel} · ${isFuture ? UI_TEXT.data.notStarted : formatDuration(duration)}`,
-    };
-  });
-  const maxDuration = Math.max(1, ...weeklyCells.map((cell) => cell.duration));
-
-  return weeklyCells.map((cell) => ({
-    ...cell,
-    activeRows: cell.duration <= 0 || cell.isFuture || cell.isOutsideYear
-      ? 0
-      : Math.max(1, Math.ceil((cell.duration / maxDuration) * HEATMAP_WEEKDAY_COUNT)),
-    intensity: cell.duration <= 0 || cell.isFuture || cell.isOutsideYear ? 0 : 0.88,
-  }));
 }
 
 function getAppTrendChartInitialDimension(): DataChartDimension {
@@ -487,14 +442,6 @@ export default function Data({
       : canUseBootstrapHeatmap
     ? bootstrapHeatmapRows!
         : heatmapPlaceholderRows;
-  const weeklyHeatmapCells = useMemo(
-    () => buildWeeklyHeatmapCells(visibleHeatmapRows),
-    [visibleHeatmapRows],
-  );
-  const weeklyHeatmapCellsByKey = useMemo(
-    () => new Map(weeklyHeatmapCells.map((cell) => [cell.key, cell])),
-    [weeklyHeatmapCells],
-  );
   const heatmapGranularityOptions = useMemo<Array<{ value: HeatmapGranularity; label: string }>>(() => [
     { value: "daily", label: UI_TEXT.data.heatmapDaily },
     { value: "weekly", label: UI_TEXT.data.heatmapWeekly },
@@ -615,229 +562,36 @@ export default function Data({
 
       <div className="data-dashboard-grid">
       <div className="data-overview-grid">
-        <div className="qp-panel p-5 md:p-6 data-trend-panel">
-          <div className="data-trend-header">
-            <h3 className="font-semibold text-[var(--qp-text-primary)] text-sm">
-              {UI_TEXT.data.activityTrend}
-            </h3>
-            <div className="data-trend-inline-metrics" aria-label={UI_TEXT.accessibility.data.trendSummary}>
-              <div className="data-trend-inline-metric">
-                <Clock3 size={13} aria-hidden />
-                <span>{visibleTrendViewModel?.metricLabels.total ?? UI_TEXT.data.weeklyTotal}</span>
-                <strong>{visibleTrendViewModel ? formatDuration(visibleTrendViewModel.totalDuration) : "-"}</strong>
-              </div>
-              <div className="data-trend-inline-metric">
-                <CalendarDays size={13} aria-hidden />
-                <span>{visibleTrendViewModel?.metricLabels.average ?? UI_TEXT.data.dailyAverage}</span>
-                <strong>{visibleTrendViewModel ? formatDuration(visibleTrendViewModel.averageDuration) : "-"}</strong>
-              </div>
-            </div>
-            <DataTrendRangeControl
-              ariaLabel={UI_TEXT.accessibility.data.trendRange}
-              selection={selectedTrendRange}
-              onChange={setSelectedTrendRange}
-            />
-          </div>
-          <div className="pt-4">
-            {!visibleTrendViewModel ? (
-              <div
-                className="data-trend-chart data-chart-placeholder flex items-center justify-center text-[var(--qp-text-tertiary)] text-xs"
-                aria-hidden="true"
-              />
-            ) : (
-              <div
-                ref={overviewTrendChart.chartRef}
-                className={`data-trend-chart ${canOpenTrendHistory ? "data-chart-openable" : ""}`}
-                onMouseDownCapture={(event) => {
-                  preventChartTextSelection(event, canOpenTrendHistory);
-                }}
-                onDoubleClickCapture={handleTrendDoubleClickCapture}
-              >
-                <ResponsiveContainer
-                  width="100%"
-                  height="100%"
-                  initialDimension={overviewTrendChart.initialDimension}
-                >
-                  <AreaChart
-                    data={visibleTrendViewModel.chartData}
-                    margin={{ top: 8, right: 22, left: -18, bottom: 0 }}
-                    onMouseMove={handleTrendMouseMove}
-                    onMouseLeave={() => {
-                      activeTrendDateRef.current = null;
-                    }}
-                  >
-                    <CartesianGrid strokeDasharray="3 3" stroke="var(--qp-chart-grid)" />
-                    <XAxis
-                      dataKey="label"
-                      tick={{ fontSize: 11, fill: "var(--qp-text-tertiary)" }}
-                      axisLine={false}
-                      tickLine={false}
-                      interval="preserveStartEnd"
-                      minTickGap={DATA_TREND_X_AXIS_MIN_TICK_GAP}
-                    />
-                    <YAxis
-                      tick={{ fontSize: 11, fill: "var(--qp-text-tertiary)" }}
-                      axisLine={false}
-                      tickLine={false}
-                      interval={0}
-                      ticks={visibleTrendViewModel.chartAxis.ticks}
-                      domain={[0, visibleTrendViewModel.chartAxis.domainMax]}
-                      tickFormatter={(value) => formatChartHours(Number(value))}
-                    />
-                    <QuietChartTooltip
-                      formatter={(value) => [
-                        formatDuration(Number(value) * 3600000),
-                        UI_TEXT.data.duration,
-                      ]}
-                    />
-                    <Area
-                      type="monotone"
-                      dataKey="hours"
-                      stroke="var(--qp-accent-default)"
-                      strokeWidth={2}
-                      fill="var(--qp-accent-default)"
-                      fillOpacity={0.12}
-                      dot={{ fill: "var(--qp-accent-default)", r: 3 }}
-                      isAnimationActive={false}
-                    />
-                  </AreaChart>
-                </ResponsiveContainer>
-              </div>
-            )}
-          </div>
-        </div>
+        <DataTrendPanel
+          selection={selectedTrendRange}
+          viewModel={visibleTrendViewModel}
+          chartRef={overviewTrendChart.chartRef}
+          initialDimension={overviewTrendChart.initialDimension}
+          canOpenHistory={canOpenTrendHistory}
+          onSelectionChange={setSelectedTrendRange}
+          onMouseDownCapture={(event) => {
+            preventChartTextSelection(event, canOpenTrendHistory);
+          }}
+          onDoubleClickCapture={handleTrendDoubleClickCapture}
+          onMouseMove={handleTrendMouseMove}
+          onMouseLeave={() => {
+            activeTrendDateRef.current = null;
+          }}
+        />
 
-        <div className="qp-panel p-5 md:p-6 data-heatmap-panel">
-          <div className="data-heatmap-panel-header">
-            <div>
-              <h3 className="font-semibold text-[var(--qp-text-primary)] text-sm">{UI_TEXT.data.activityHeatmap}</h3>
-              <p className="mt-1 text-[11px] text-[var(--qp-text-tertiary)]">
-                {selectedHeatmapViewLabel} · {UI_TEXT.data.activityHeatmapHint}
-              </p>
-            </div>
-            <div className="data-heatmap-header-actions">
-              <QuietSegmentedFilter
-                value={heatmapGranularity}
-                options={heatmapGranularityOptions}
-                onChange={setHeatmapGranularity}
-                className="data-heatmap-granularity"
-              />
-              <div className="data-heatmap-range-control" aria-label={UI_TEXT.accessibility.data.heatmapRange}>
-                <button
-                  type="button"
-                  onClick={() => selectAdjacentHeatmapView(1)}
-                  disabled={!canSelectOlderHeatmapView}
-                  className="qp-control data-heatmap-range-arrow"
-                  aria-label={UI_TEXT.accessibility.data.earlierRange}
-                >
-                  <ChevronLeft size={14} />
-                </button>
-                <button
-                  type="button"
-                  className="qp-status data-heatmap-range-label"
-                  disabled
-                >
-                  {selectedHeatmapViewLabel}
-                </button>
-                <button
-                  type="button"
-                  onClick={() => selectAdjacentHeatmapView(-1)}
-                  disabled={!canSelectNewerHeatmapView}
-                  className="qp-control data-heatmap-range-arrow"
-                  aria-label={UI_TEXT.accessibility.data.newerRange}
-                >
-                  <ChevronRight size={14} />
-                </button>
-              </div>
-            </div>
-          </div>
-
-          <div
-            className="data-heatmap data-heatmap-calendar mt-5"
-          >
-              <div className="data-heatmap-content">
-                  <div
-                    className="data-heatmap-scroll"
-                    style={{ "--data-heatmap-week-count": visibleHeatmapRows.length } as CSSProperties}
-                  >
-                    <div className="data-heatmap-months" aria-hidden>
-                      <span />
-                      {visibleHeatmapRows.map((week) => (
-                        <span key={`${selectedHeatmapViewKey}:${week.key}`}>{week.monthLabel}</span>
-                      ))}
-                    </div>
-                    <div className="data-heatmap-body" aria-label={UI_TEXT.data.activityHeatmap}>
-                      <div className="data-heatmap-weekdays" aria-hidden>
-                        {UI_TEXT.date.heatmapWeekdays.map((weekday, index) => (
-                          <span key={`${weekday}-${index}`}>{weekday}</span>
-                        ))}
-                      </div>
-                      <div className="data-heatmap-weeks">
-                        {visibleHeatmapRows.map((week) => {
-                          const weeklyCell = weeklyHeatmapCellsByKey.get(week.key);
-                          return (
-                            <div key={`${selectedHeatmapViewKey}:${week.key}`} className="data-heatmap-week">
-                              {week.cells.map((cell, cellIndex) => {
-                                const hideRecentDailyFutureCell = heatmapGranularity === "daily"
-                                  && selectedHeatmapView === "recent"
-                                  && cell.isFuture;
-                                if (hideRecentDailyFutureCell) {
-                                  return null;
-                                }
-
-                                const isDailyFutureCell = heatmapGranularity === "daily" && cell.isFuture;
-                                const isUnavailable = isDailyFutureCell || cell.isOutsideYear;
-                                const canOpenHistoryDate = !cell.isFuture && !cell.isOutsideYear && Boolean(onOpenHistoryDate);
-                                const tooltipLabel = heatmapGranularity === "weekly"
-                                  ? weeklyCell?.label ?? cell.label
-                                  : cell.label;
-                                const isWeeklyFutureCell = heatmapGranularity === "weekly"
-                                  && Boolean(weeklyCell?.isFuture);
-                                const tooltipDisabled = heatmapGranularity === "weekly"
-                                  ? cell.isOutsideYear || isWeeklyFutureCell
-                                  : isUnavailable;
-                                const isWeeklyFilledCell = heatmapGranularity === "weekly"
-                                  && !cell.isOutsideYear
-                                  && cellIndex >= HEATMAP_WEEKDAY_COUNT - (weeklyCell?.activeRows ?? 0);
-                                const heatmapIntensity = heatmapGranularity === "weekly"
-                                  ? isWeeklyFilledCell ? weeklyCell?.intensity ?? 0 : 0
-                                  : cell.intensity;
-                                return (
-                                  <QuietTooltip
-                                    key={`${selectedHeatmapViewKey}:${cell.key}`}
-                                    label={tooltipLabel}
-                                    placement="top"
-                                    disabled={tooltipDisabled}
-                                    className={`data-heatmap-tooltip-anchor ${
-                                      tooltipDisabled ? "data-heatmap-tooltip-anchor-unavailable" : ""
-                                    }`}
-                                  >
-                                    <span
-                                      className={`data-heatmap-cell ${
-                                        canOpenHistoryDate ? "data-heatmap-cell-openable" : ""
-                                      } ${
-                                        isDailyFutureCell || isWeeklyFutureCell ? "data-heatmap-cell-future" : ""
-                                      } ${cell.isOutsideYear ? "data-heatmap-cell-outside" : ""}`}
-                                      onDoubleClick={() => {
-                                        if (canOpenHistoryDate) {
-                                          onOpenHistoryDate?.(cell.date);
-                                        }
-                                      }}
-                                      data-history-date={canOpenHistoryDate ? cell.date : undefined}
-                                      style={{ "--heatmap-intensity": heatmapIntensity } as CSSProperties}
-                                    />
-                                  </QuietTooltip>
-                                );
-                              })}
-                            </div>
-                          );
-                        })}
-                      </div>
-                    </div>
-                  </div>
-              </div>
-            </div>
-        </div>
+        <DataHeatmapPanel
+          selectedHeatmapView={selectedHeatmapView}
+          selectedHeatmapViewKey={selectedHeatmapViewKey}
+          selectedHeatmapViewLabel={selectedHeatmapViewLabel}
+          rows={visibleHeatmapRows}
+          granularity={heatmapGranularity}
+          granularityOptions={heatmapGranularityOptions}
+          canSelectOlderHeatmapView={canSelectOlderHeatmapView}
+          canSelectNewerHeatmapView={canSelectNewerHeatmapView}
+          onGranularityChange={setHeatmapGranularity}
+          onSelectAdjacentHeatmapView={selectAdjacentHeatmapView}
+          onOpenHistoryDate={onOpenHistoryDate}
+        />
       </div>
 
       <div className="qp-panel p-5 md:p-6 data-app-panel">
