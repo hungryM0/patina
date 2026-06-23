@@ -1,7 +1,7 @@
 import { type MouseEvent, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { BarChart3, Search } from "lucide-react";
 import { Area, AreaChart, CartesianGrid, ResponsiveContainer, XAxis, YAxis } from "recharts";
-import { UI_TEXT } from "../../../shared/copy/uiText.ts";
+import { UI_TEXT } from "../../../shared/copy/index.ts";
 import type { AppLanguage } from "../../../shared/settings/appSettings.ts";
 import {
   buildDataAppTrendViewModel,

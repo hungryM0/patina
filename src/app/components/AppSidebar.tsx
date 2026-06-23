@@ -2,7 +2,7 @@ import type { CSSProperties, ReactNode } from "react";
 import { motion } from "framer-motion";
 import { ArrowUpCircle, Monitor, Clock, Settings2, Sparkles, BarChart3, Info, ToolCase } from "lucide-react";
 import appIconUrl from "../../../src-tauri/icons/32x32.png";
-import { UI_TEXT } from "../../shared/copy/uiText";
+import { UI_TEXT } from "../../shared/copy/index.ts";
 import type { View } from "../types/view";
 
 interface Props {

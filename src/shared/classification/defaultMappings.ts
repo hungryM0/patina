@@ -1,5 +1,5 @@
 import type { AppCategory } from "./categoryTokens.ts";
-import type { UiLanguage } from "../copy/uiText.ts";
+import type { UiLanguage } from "../copy/index.ts";
 
 export interface DefaultAppMapping {
   name: string;

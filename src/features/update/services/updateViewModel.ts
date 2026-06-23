@@ -1,5 +1,5 @@
 import type { UpdateErrorStage, UpdateSnapshot } from "../../../shared/types/update";
-import { getUiTextLanguage, UI_TEXT } from "../../../shared/copy/uiText.ts";
+import { getUiTextLanguage, UI_TEXT } from "../../../shared/copy/index.ts";
 
 export type UpdateAction =
   | "check"

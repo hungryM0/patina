@@ -1,7 +1,7 @@
 import { AlarmClock, BellRing, TimerReset } from "lucide-react";
 import { useCallback, useState, type ReactNode } from "react";
 import QuietDialog from "../../../shared/components/QuietDialog.tsx";
-import { UI_TEXT } from "../../../shared/copy/uiText.ts";
+import { UI_TEXT } from "../../../shared/copy/index.ts";
 import type { ToolAlert } from "../../../shared/types/tools.ts";
 import { useToolAlerts } from "../hooks/useToolAlerts.ts";
 import { ToolsRuntimeService } from "../services/toolsRuntimeService.ts";

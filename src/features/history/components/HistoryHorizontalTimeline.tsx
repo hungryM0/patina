@@ -1,7 +1,7 @@
 import { useEffect, useState, type CSSProperties, type ReactNode } from "react";
 import { AppClassification } from "../../../shared/classification/appClassification.ts";
 import QuietTooltip from "../../../shared/components/QuietTooltip.tsx";
-import { getUiLocale } from "../../../shared/copy/uiText.ts";
+import { UI_TEXT } from "../../../shared/copy/index.ts";
 import { formatDuration, formatTime } from "../services/historyFormatting.ts";
 import type {
   HistoryTimelineDisplayMode,
@@ -77,27 +77,6 @@ function getSegmentLabel(segment: HistoryTimelineSegment, mode: HistoryTimelineD
   return mode === "category" ? segment.categoryLabel : segment.displayName;
 }
 
-function getTimelineCopy() {
-  const isEnglish = getUiLocale() === "en-US";
-  if (isEnglish) {
-    return {
-      ariaLabel: "Horizontal daily timeline",
-      defaultTitle: "Day Timeline",
-      emptyDay: "No records for this day",
-      remainingLegendItems: (count: number) => `+${count}`,
-      remainingLegendItemsHint: (labels: string[]) => labels.join(", "),
-    };
-  }
-
-  return {
-    ariaLabel: "横向日内时间轴",
-    defaultTitle: "时间轴",
-    emptyDay: "这一天暂无记录",
-    remainingLegendItems: (count: number) => `+${count}`,
-    remainingLegendItemsHint: (labels: string[]) => labels.join("、"),
-  };
-}
-
 function getViewportWidth() {
   return typeof window === "undefined" ? 0 : window.innerWidth;
 }
@@ -146,7 +125,7 @@ export default function HistoryHorizontalTimeline({
   showEmptyMessage = true,
   emptyMessage,
 }: Props) {
-  const copy = getTimelineCopy();
+  const copy = UI_TEXT.history.horizontalTimeline;
   const headingTitle = title === undefined ? copy.defaultTitle : title;
   const resolvedEmptyMessage = emptyMessage ?? copy.emptyDay;
   const [viewportWidth, setViewportWidth] = useState(getViewportWidth);

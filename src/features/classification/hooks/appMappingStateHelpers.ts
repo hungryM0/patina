@@ -6,7 +6,7 @@ import {
 } from "../../../shared/classification/categoryTokens.ts";
 import type { AppOverride } from "../services/classificationService.ts";
 import type { WebDomainOverride } from "../../../shared/types/webActivity.ts";
-import { getUiLocale } from "../../../shared/copy/uiText.ts";
+import { getUiLocale } from "../../../shared/copy/index.ts";
 import {
   cloneClassificationDraftState,
   type ClassificationDraftState,

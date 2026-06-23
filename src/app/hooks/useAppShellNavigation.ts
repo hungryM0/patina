@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import { UI_TEXT } from "../../shared/copy/uiText.ts";
+import { UI_TEXT } from "../../shared/copy/index.ts";
 import type { View } from "../types/view";
 import {
   consumePendingUpdateRelaunchView,

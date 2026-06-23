@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
 import type { QuietToastTone } from "../../../shared/components/QuietToast";
-import { UI_TEXT } from "../../../shared/copy/uiText.ts";
+import { UI_TEXT } from "../../../shared/copy/index.ts";
 import {
   deleteWebDavBackupSecret,
   downloadWebDavBackup,

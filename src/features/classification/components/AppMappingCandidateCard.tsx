@@ -7,7 +7,7 @@ import QuietColorField from "../../../shared/components/QuietColorField";
 import QuietInlineAction from "../../../shared/components/QuietInlineAction";
 import QuietIconAction from "../../../shared/components/QuietIconAction";
 import QuietBadge from "../../../shared/components/QuietBadge";
-import { UI_TEXT } from "../../../shared/copy/uiText.ts";
+import { UI_TEXT } from "../../../shared/copy/index.ts";
 
 interface AppMappingCandidateCardProps {
   candidate: ObservedAppCandidate;

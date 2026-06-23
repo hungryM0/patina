@@ -1,6 +1,6 @@
 import { AlarmClock, FastForward, Pause, Play, RotateCcw } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
-import { UI_TEXT } from "../../../shared/copy/uiText.ts";
+import { UI_TEXT } from "../../../shared/copy/index.ts";
 import type { StartPomodoroInput, ToolsRuntimeSnapshot } from "../../../shared/types/tools.ts";
 import type { PomodoroViewModel } from "../types.ts";
 import ToolDurationInput from "./ToolDurationInput.tsx";

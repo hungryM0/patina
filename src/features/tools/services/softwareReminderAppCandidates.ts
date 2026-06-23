@@ -2,7 +2,7 @@ import { ClassificationService } from "../../classification/services/classificat
 import type { ClassificationBootstrapData } from "../../classification/services/classificationService.ts";
 import type { ObservedAppCandidate } from "../../classification/types.ts";
 import { AppClassification } from "../../../shared/classification/appClassification.ts";
-import { getUiTextLanguage } from "../../../shared/copy/uiText.ts";
+import { getUiTextLanguage } from "../../../shared/copy/index.ts";
 import type { ToolSoftwareReminderAppCandidate } from "../../../shared/types/tools.ts";
 
 export interface SoftwareReminderAppCandidateDeps {

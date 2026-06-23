@@ -1,6 +1,6 @@
 import { MonitorCog } from "lucide-react";
 import QuietSwitch from "../../../shared/components/QuietSwitch";
-import { UI_TEXT } from "../../../shared/copy/uiText.ts";
+import { UI_TEXT } from "../../../shared/copy/index.ts";
 
 type SettingsResidentPanelProps = {
   minimizeToWidgetChecked: boolean;

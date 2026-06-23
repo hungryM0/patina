@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Bar, BarChart, Rectangle, ResponsiveContainer, XAxis, YAxis } from "recharts";
 import type { BarShapeProps } from "recharts";
-import { UI_TEXT } from "../copy/uiText.ts";
+import { UI_TEXT } from "../copy/index.ts";
 import type {
   HourlyActivityPoint,
   HourlyCategoryActivity,

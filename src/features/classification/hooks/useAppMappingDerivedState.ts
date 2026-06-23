@@ -1,5 +1,5 @@
 import { useCallback, useMemo } from "react";
-import { getUiTextLanguage } from "../../../shared/copy/uiText.ts";
+import { getUiTextLanguage } from "../../../shared/copy/index.ts";
 import { useIconThemeColors } from "../../../shared/hooks/useIconThemeColors";
 import { AppClassification } from "../../../shared/classification/appClassification.ts";
 import {

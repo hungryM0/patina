@@ -4,7 +4,7 @@ import QuietColorField from "../../../shared/components/QuietColorField";
 import QuietIconAction from "../../../shared/components/QuietIconAction";
 import type { ColorDisplayFormat } from "../../../shared/lib/colorFormatting";
 import { AppClassification } from "../../../shared/classification/appClassification.ts";
-import { UI_TEXT } from "../../../shared/copy/uiText.ts";
+import { UI_TEXT } from "../../../shared/copy/index.ts";
 
 interface Props {
   categories: AppCategory[];

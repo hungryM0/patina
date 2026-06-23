@@ -7,7 +7,7 @@ import {
   startCurrentWindowDrag,
   toggleCurrentWindowMaximized,
 } from "../../platform/desktop/windowControlGateway";
-import { UI_TEXT } from "../../shared/copy/uiText";
+import { UI_TEXT } from "../../shared/copy/index.ts";
 
 const APP_TITLE = "Patina";
 

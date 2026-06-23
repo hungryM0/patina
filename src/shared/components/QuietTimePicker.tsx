@@ -9,7 +9,7 @@ import {
 } from "react";
 import { createPortal } from "react-dom";
 import { Clock3 } from "lucide-react";
-import { UI_TEXT } from "../copy/uiText.ts";
+import { UI_TEXT } from "../copy/index.ts";
 
 interface QuietTimePickerProps {
   value: string;

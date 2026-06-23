@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { createRequire } from "node:module";
 import ts from "typescript";
-import { COPY } from "../src/shared/copy/uiText.ts";
+import { COPY } from "../src/shared/copy/index.ts";
 
 const EXPECTED_VIEWS = [
   "dashboard",
@@ -362,6 +362,7 @@ await runTest("History regular view avoids visible loading copy", () => {
 
 await runTest("History separates timeline list dialog from zoom dialog", () => {
   const history = readUtf8("src/features/history/components/History.tsx");
+  const historyCopy = readUtf8("src/shared/copy/domains/historyCopy.ts");
   const historyTimeline = readUtf8("src/features/history/services/historyTimelineViewModel.ts");
   const historyCss = readUtf8("src/styles/features/history.css");
 
@@ -380,7 +381,7 @@ await runTest("History separates timeline list dialog from zoom dialog", () => {
   assert.match(history, /history-timeline-zoom-open/);
   assert.match(history, /history-timeline-zoom-switch/);
   assert.match(history, /history-timeline-zoom-dialog-surface/);
-  assert.match(history, /emptyTimelineWindow: "当前时间段暂无记录"/);
+  assert.match(historyCopy, /emptyTimelineWindow: "当前时间段暂无记录"/);
   assert.match(history, /emptyMessage=\{historyCopy\.emptyTimelineWindow\}/);
   assert.match(history, /handleTimelineViewportWheel/);
   assert.match(history, /viewportDurationMs \/ 6/);
@@ -432,7 +433,7 @@ await runTest("settings services only expose web sync and remote push controls",
   const appSettings = readUtf8("src/shared/settings/appSettings.ts");
   const appSettingsStore = readUtf8("src/platform/persistence/appSettingsStore.ts");
   const bridgeRuntime = readUtf8("src-tauri/src/platform/web_activity_bridge.rs");
-  const uiText = readUtf8("src/shared/copy/uiText.ts");
+  const settingsCopy = readUtf8("src/shared/copy/domains/settingsCopy.ts");
   const combined = [
     settings,
     settingsInterface,
@@ -459,11 +460,11 @@ await runTest("settings services only expose web sync and remote push controls",
   assert.match(settingsInterface, /UI_TEXT\.settings\.webActivityHelpTitle/);
   assert.match(settingsStyles, /\.settings-web-activity-title-row \{\s*min-height: 20px;/);
   assert.match(settingsStyles, /\.settings-inline-help-button \{\s*display: inline-flex;\s*height: 18px;/);
-  assert.match(uiText, /webActivityHelpAction/);
-  assert.match(uiText, /webActivityHelpSteps/);
-  assert.match(uiText, /Patina Web Sync 启用并连接成功后：\\n• 自动同步当前活动标签页的网站地址、标题和网站图标。/);
-  assert.doesNotMatch(uiText, /浏览器内部页面不会写入网页记录/);
-  assert.doesNotMatch(uiText, /浏览历史库/);
+  assert.match(settingsCopy, /webActivityHelpAction/);
+  assert.match(settingsCopy, /webActivityHelpSteps/);
+  assert.match(settingsCopy, /Patina Web Sync 启用并连接成功后：\\n• 自动同步当前活动标签页的网站地址、标题和网站图标。/);
+  assert.doesNotMatch(settingsCopy, /浏览器内部页面不会写入网页记录/);
+  assert.doesNotMatch(settingsCopy, /浏览历史库/);
   assert.match(settings, /draftSettings\.webActivityPort/);
   assert.match(appSettingsStore, /webActivityPort: "web_activity_port"/);
   assert.doesNotMatch(bridgeRuntime, /tungstenite|accept_async|Message::Text|browser-bridge/);

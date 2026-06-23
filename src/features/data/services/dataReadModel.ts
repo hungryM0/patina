@@ -1,6 +1,6 @@
 import { AppClassification } from "../../../shared/classification/appClassification.ts";
 import type { SessionRange } from "../../../shared/lib/sessionReadCompiler.ts";
-import { getUiLocale, UI_TEXT } from "../../../shared/copy/uiText.ts";
+import { getUiLocale, UI_TEXT } from "../../../shared/copy/index.ts";
 import {
   getEarliestSessionStartTime,
   getSessionSummariesInRange,

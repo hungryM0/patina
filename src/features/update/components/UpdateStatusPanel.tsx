@@ -5,7 +5,7 @@ import {
   type UpdateActionModel,
 } from "../services/updateViewModel";
 import UpdateProgressBar from "./UpdateProgressBar";
-import { UI_TEXT } from "../../../shared/copy/uiText.ts";
+import { UI_TEXT } from "../../../shared/copy/index.ts";
 
 interface UpdateStatusPanelProps {
   snapshot: UpdateSnapshot;

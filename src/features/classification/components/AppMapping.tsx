@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { RefreshCw, Save, Search, Sparkles, SlidersHorizontal } from "lucide-react";
-import { UI_TEXT } from "../../../shared/copy/uiText.ts";
+import { UI_TEXT } from "../../../shared/copy/index.ts";
 import QuietDialog from "../../../shared/components/QuietDialog";
 import QuietPageHeader from "../../../shared/components/QuietPageHeader";
 import QuietSegmentedFilter from "../../../shared/components/QuietSegmentedFilter";

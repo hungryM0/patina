@@ -1,6 +1,6 @@
 import { type CSSProperties, useMemo } from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
-import { UI_TEXT } from "../../../shared/copy/uiText.ts";
+import { UI_TEXT } from "../../../shared/copy/index.ts";
 import QuietSegmentedFilter from "../../../shared/components/QuietSegmentedFilter";
 import QuietTooltip from "../../../shared/components/QuietTooltip";
 import { formatDuration } from "../../history/services/historyFormatting";

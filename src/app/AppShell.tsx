@@ -1,5 +1,5 @@
 import { Suspense, useCallback, useEffect, useRef, useState } from "react";
-import { getUiText, setUiTextLanguage } from "../shared/copy/uiText.ts";
+import { getUiText, setUiTextLanguage } from "../shared/copy/index.ts";
 import AppSidebar from "./components/AppSidebar";
 import AppTitleBar from "./components/AppTitleBar";
 import type { View } from "./types/view";

@@ -1,4 +1,4 @@
-import { UI_TEXT } from "../../../shared/copy/uiText.ts";
+import { UI_TEXT } from "../../../shared/copy/index.ts";
 import type { QuietToastTone } from "../../../shared/components/QuietToast";
 import type { CleanupRange } from "../types.ts";
 import type { BackupRestorePreparation, BackupRestoreStrategy } from "./settingsRuntimeAdapterService.ts";

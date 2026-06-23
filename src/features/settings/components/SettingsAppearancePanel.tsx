@@ -7,7 +7,7 @@ import {
   COLOR_SCHEME_OPTIONS,
   type ThemeLibrary,
 } from "../../../shared/settings/colorSchemeOptions.ts";
-import { UI_TEXT } from "../../../shared/copy/uiText.ts";
+import { UI_TEXT } from "../../../shared/copy/index.ts";
 
 type SettingsAppearancePanelProps = {
   themeMode: ThemeMode;

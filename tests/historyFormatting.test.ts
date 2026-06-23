@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { formatDuration, formatTime } from "../src/features/history/services/historyFormatting.ts";
-import { setUiTextLanguage } from "../src/shared/copy/uiText.ts";
+import { setUiTextLanguage } from "../src/shared/copy/index.ts";
 
 let passed = 0;
 

@@ -1,5 +1,5 @@
 import { AppClassification } from "../../shared/classification/appClassification.ts";
-import { UI_TEXT } from "../../shared/copy/uiText.ts";
+import { UI_TEXT } from "../../shared/copy/index.ts";
 import type { AppSettings } from "../../shared/settings/appSettings.ts";
 import type {
   TrackerHealthSnapshot,

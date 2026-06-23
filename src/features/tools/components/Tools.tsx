@@ -2,7 +2,7 @@ import { AlarmClock, BellRing, RefreshCw, Timer, ToolCase } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
 import QuietPageHeader from "../../../shared/components/QuietPageHeader.tsx";
 import type { QuietToastTone } from "../../../shared/components/QuietToast.tsx";
-import { UI_TEXT, type UiText } from "../../../shared/copy/uiText.ts";
+import { UI_TEXT, type UiText } from "../../../shared/copy/index.ts";
 import type { TimerMode } from "../../../shared/types/tools.ts";
 import { useToolsPageState } from "../hooks/useToolsPageState.ts";
 import {

@@ -1,5 +1,5 @@
 import QuietDialog from "./QuietDialog";
-import { UI_TEXT } from "../copy/uiText.ts";
+import { UI_TEXT } from "../copy/index.ts";
 
 interface QuietConfirmDialogProps {
   open: boolean;

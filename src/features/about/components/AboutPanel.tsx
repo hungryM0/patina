@@ -7,7 +7,7 @@ import type { ReactNode } from "react";
 import appIconUrl from "../../../../src-tauri/icons/icon.png";
 import type { UpdateSnapshot } from "../../../shared/types/update";
 import UpdateStatusPanel from "../../update/components/UpdateStatusPanel";
-import { UI_TEXT } from "../../../shared/copy/uiText.ts";
+import { UI_TEXT } from "../../../shared/copy/index.ts";
 
 type AboutPanelProps = {
   appVersion: string;

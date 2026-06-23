@@ -11,7 +11,7 @@ import {
   runTest,
   shouldTrackProcess,
 } from "./shared.ts";
-import { setUiTextLanguage } from "../../src/shared/copy/uiText.ts";
+import { setUiTextLanguage } from "../../src/shared/copy/index.ts";
 
 export function runProcessMapperTests() {
   runTest("system windows processes are excluded from tracking", () => {

@@ -11,7 +11,7 @@ import {
   markPendingUpdateRelaunchViewRestore,
   rememberLastActiveView,
 } from "../src/app/services/updateRelaunchViewStorage.ts";
-import { setUiTextLanguage } from "../src/shared/copy/uiText.ts";
+import { setUiTextLanguage } from "../src/shared/copy/index.ts";
 import type { UpdateSnapshot } from "../src/shared/types/update.ts";
 
 function makeSnapshot(overrides: Partial<UpdateSnapshot> = {}): UpdateSnapshot {

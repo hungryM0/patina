@@ -3,28 +3,8 @@ import wechatRewardDarkUrl from "../assets/wechat-reward-dark.png";
 import wechatRewardLightUrl from "../assets/wechat-reward-light.png";
 import kofiButtonUrl from "../assets/kofi-button.png";
 import QuietDialog from "../../../shared/components/QuietDialog";
-import { getUiTextLanguage, UI_TEXT } from "../../../shared/copy/uiText.ts";
+import { UI_TEXT } from "../../../shared/copy/index.ts";
 
-const SUPPORT_DIALOG_COPY = {
-  "zh-CN": {
-    description: "如果 Patina 对你有帮助，可以选择一种方式支持持续维护。",
-    wechatTitle: "微信赞赏码",
-    wechatHint: "使用微信扫一扫赞赏。",
-    wechatAlt: "微信赞赏码",
-    kofiTitle: "Ko-fi",
-    kofiHint: "通过 Ko-fi 打开赞助页面。",
-    openKofi: "打开 Ko-fi",
-  },
-  "en-US": {
-    description: "If Patina helps you, choose a way to support ongoing maintenance.",
-    wechatTitle: "WeChat reward code",
-    wechatHint: "Scan with WeChat to send a reward.",
-    wechatAlt: "WeChat reward code",
-    kofiTitle: "Ko-fi",
-    kofiHint: "Open the Ko-fi sponsor page.",
-    openKofi: "Open Ko-fi",
-  },
-} as const;
 
 interface AboutSupportDialogProps {
   open: boolean;
@@ -37,7 +17,7 @@ export default function AboutSupportDialog({
   onClose,
   onOpenKofi,
 }: AboutSupportDialogProps) {
-  const copy = SUPPORT_DIALOG_COPY[getUiTextLanguage()];
+  const copy = UI_TEXT.about.supportDialog;
 
   return (
     <QuietDialog

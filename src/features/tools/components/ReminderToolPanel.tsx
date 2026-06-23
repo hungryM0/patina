@@ -10,7 +10,7 @@ import {
 import QuietDatePicker from "../../../shared/components/QuietDatePicker.tsx";
 import QuietSegmentedFilter from "../../../shared/components/QuietSegmentedFilter.tsx";
 import QuietTimePicker from "../../../shared/components/QuietTimePicker.tsx";
-import { UI_TEXT } from "../../../shared/copy/uiText.ts";
+import { UI_TEXT } from "../../../shared/copy/index.ts";
 import type { ToolSoftwareReminderAppCandidate } from "../../../shared/types/tools.ts";
 import {
   readToolsReminderMode,

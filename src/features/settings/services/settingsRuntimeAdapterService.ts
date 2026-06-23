@@ -39,7 +39,7 @@ import {
   getWebActivityBridgeSnapshot,
   type WebActivityBridgeSnapshot,
 } from "../../../platform/runtime/webActivityBridgeGateway.ts";
-import { getUiLocale, UI_TEXT } from "../../../shared/copy/uiText.ts";
+import { getUiLocale, UI_TEXT } from "../../../shared/copy/index.ts";
 import type { CleanupRange } from "../types.ts";
 import {
   buildSessionCleanupPlan,

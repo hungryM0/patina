@@ -2,7 +2,7 @@ import { Cloud, Eye, EyeOff } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import QuietActionRow from "../../../shared/components/QuietActionRow";
 import QuietDialog from "../../../shared/components/QuietDialog";
-import { UI_TEXT } from "../../../shared/copy/uiText.ts";
+import { UI_TEXT } from "../../../shared/copy/index.ts";
 import type { RemoteBackupEntry, RemoteBackupState, RemoteBackupFormDraft } from "../hooks/useRemoteBackupState.ts";
 import { DEFAULT_WEBDAV_REMOTE_DIR } from "../hooks/useRemoteBackupState.ts";
 

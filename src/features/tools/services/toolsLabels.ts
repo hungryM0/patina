@@ -1,4 +1,4 @@
-import { UI_TEXT, type UiText } from "../../../shared/copy/uiText.ts";
+import { UI_TEXT, type UiText } from "../../../shared/copy/index.ts";
 import type { ToolsViewModelLabels } from "../types.ts";
 
 export function buildToolsViewModelLabels(uiText: UiText = UI_TEXT): ToolsViewModelLabels {

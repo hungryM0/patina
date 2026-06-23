@@ -1,0 +1,58 @@
+const ZH_CN_WIDGET_COPY = {
+  widget: {
+    tracking: "追踪中",
+    sustainedTracking: "持续参与",
+    currentApp: "当前应用",
+    currentActivityRecording: "当前活动正在记录",
+    currentSustainedRecording: "当前持续参与正在记录",
+    pause: "暂停",
+    resume: "恢复",
+    error: "异常",
+    trackingService: "追踪服务",
+    trackingNotSynced: "追踪状态暂时未同步",
+    paused: "已暂停",
+    trackingPaused: "追踪已暂停",
+    clickToResume: "点击即可恢复追踪",
+    idle: "空闲",
+    currentlyIdle: "当前空闲中",
+    currentAppNotTracked: "当前应用不追踪",
+    noTrackableActivity: "当前暂无可追踪活动",
+    windowExcluded: "当前窗口不会进入记录",
+    loadingStatus: "加载中",
+    loadingAppName: "挂件",
+    loadingHelper: "正在同步状态",
+    pauseTracking: "暂停追踪",
+  },
+};
+
+const EN_US_WIDGET_COPY = {
+  widget: {
+    tracking: "Tracking",
+    sustainedTracking: "Sustained",
+    currentApp: "Current app",
+    currentActivityRecording: "Current activity is being recorded",
+    currentSustainedRecording: "Sustained activity is being recorded",
+    pause: "Pause",
+    resume: "Resume",
+    error: "Error",
+    trackingService: "Tracking service",
+    trackingNotSynced: "Tracking status is not synced yet",
+    paused: "Paused",
+    trackingPaused: "Tracking paused",
+    clickToResume: "Click to resume tracking",
+    idle: "Idle",
+    currentlyIdle: "Currently idle",
+    currentAppNotTracked: "Current app is not tracked",
+    noTrackableActivity: "No trackable activity",
+    windowExcluded: "Current window will not be recorded",
+    loadingStatus: "Loading",
+    loadingAppName: "Widget",
+    loadingHelper: "Syncing status",
+    pauseTracking: "Pause tracking",
+  },
+};
+
+export const widgetCopy = {
+  "zh-CN": ZH_CN_WIDGET_COPY,
+  "en-US": EN_US_WIDGET_COPY,
+} as const;

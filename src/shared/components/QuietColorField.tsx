@@ -11,7 +11,7 @@ import {
   type HslColor,
   type RgbColor,
 } from "../lib/colorFormatting";
-import { UI_TEXT } from "../copy/uiText.ts";
+import { UI_TEXT } from "../copy/index.ts";
 
 interface Props {
   color: string;

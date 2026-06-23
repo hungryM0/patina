@@ -7,7 +7,7 @@ import QuietColorField from "../../../shared/components/QuietColorField";
 import QuietIconAction from "../../../shared/components/QuietIconAction";
 import QuietInlineAction from "../../../shared/components/QuietInlineAction";
 import QuietSelect from "../../../shared/components/QuietSelect";
-import { UI_TEXT } from "../../../shared/copy/uiText.ts";
+import { UI_TEXT } from "../../../shared/copy/index.ts";
 
 interface WebDomainMappingCardProps {
   candidate: ObservedWebDomainCandidate;

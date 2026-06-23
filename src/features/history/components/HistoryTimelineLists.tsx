@@ -1,6 +1,6 @@
 import { AnimatePresence } from "framer-motion";
 import { ChevronDown, ChevronRight, ChevronUp, Globe2 } from "lucide-react";
-import { getUiLocale, UI_TEXT } from "../../../shared/copy/uiText.ts";
+import { getUiLocale, UI_TEXT } from "../../../shared/copy/index.ts";
 import { AppClassification } from "../../../shared/classification/appClassification.ts";
 import { formatDuration, formatTime } from "../services/historyFormatting.ts";
 import type { TimelineSession } from "../../../shared/lib/sessionReadCompiler.ts";
@@ -35,9 +35,9 @@ function getWebTimelineItemAriaLabel(item: WebTimelineItem) {
   const timeLabel = `${formatTime(item.startTime)} - ${item.endTime ? formatTime(item.endTime) : UI_TEXT.history.untilNow}`;
   const durationLabel = formatDuration(item.duration);
   if (getUiLocale() === "en-US") {
-    return `${item.label}, ${item.title ?? "Untitled page"}, ${timeLabel}, ${durationLabel}`;
+    return `${item.label}, ${item.title ?? UI_TEXT.history.webTimelineUntitledPage}, ${timeLabel}, ${durationLabel}`;
   }
-  return `${item.label}，${item.title ?? "无标题网页"}，${timeLabel}，${durationLabel}`;
+  return `${item.label}，${item.title ?? UI_TEXT.history.webTimelineUntitledPage}，${timeLabel}，${durationLabel}`;
 }
 
 export function HistoryTimelineList({

@@ -9,7 +9,7 @@ import {
 import { DEFAULT_APP_MAPPINGS } from "./defaultMappings.ts";
 import { resolveCanonicalExecutable, shouldTrackProcess } from "./processNormalization.ts";
 import { CategoryColorRegistry } from "./categoryColorRegistry.ts";
-import { getUiTextLanguage } from "../copy/uiText.ts";
+import { getUiTextLanguage } from "../copy/index.ts";
 
 export type MappingConfidence = "high" | "medium" | "low";
 

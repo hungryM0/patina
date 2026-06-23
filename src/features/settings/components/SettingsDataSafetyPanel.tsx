@@ -10,7 +10,7 @@ import {
   RotateCcw,
   Trash2,
 } from "lucide-react";
-import { UI_TEXT } from "../../../shared/copy/uiText.ts";
+import { UI_TEXT } from "../../../shared/copy/index.ts";
 import QuietDangerAction from "../../../shared/components/QuietDangerAction";
 import QuietSubpanel from "../../../shared/components/QuietSubpanel";
 import QuietActionRow from "../../../shared/components/QuietActionRow";
@@ -21,7 +21,6 @@ import type { CleanupRange } from "../types";
 import type { BackupRestoreStrategy } from "../services/settingsRuntimeAdapterService.ts";
 import type { StorageSnapshot } from "../services/settingsRuntimeAdapterService.ts";
 import type { RemoteBackupEntry, RemoteBackupState } from "../hooks/useRemoteBackupState.ts";
-import { getStorageSettingsCopy } from "../copy/storageSettingsCopy.ts";
 import SettingsRemoteBackupPanel from "./SettingsRemoteBackupPanel";
 import SettingsStepperSlider from "./SettingsStepperSlider";
 import { toEbwebviewCachePath } from "../services/storagePathDisplay.ts";
@@ -85,7 +84,7 @@ function StoragePathRow({
   changeDisabled?: boolean;
   restoreDisabled?: boolean;
 }) {
-  const storageText = getStorageSettingsCopy();
+  const storageText = UI_TEXT.settings.storage;
   return (
     <div className="settings-storage-path-row">
       <div className="min-w-0">
@@ -169,7 +168,7 @@ export default function SettingsDataSafetyPanel({
   const webviewCache = storageSnapshot?.webviewCache;
   const webviewCachePath = webviewCache?.ebwebviewPath
     ?? (storageSnapshot ? toEbwebviewCachePath(storageSnapshot.paths.webviewRoot) : "");
-  const storageText = getStorageSettingsCopy();
+  const storageText = UI_TEXT.settings.storage;
   const installRootSizeText = formatDirectorySize(storageSnapshot?.sizes.installDirSizeBytes ?? 0);
   const dataRootSizeText = formatDirectorySize(storageSnapshot?.sizes.dataSizeBytes ?? 0);
   const cacheRootSizeText = formatDirectorySize(webviewCache?.totalSizeBytes ?? 0);

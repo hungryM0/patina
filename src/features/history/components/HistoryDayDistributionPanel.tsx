@@ -1,6 +1,6 @@
 import { motion } from "framer-motion";
 import { Globe2 } from "lucide-react";
-import { UI_TEXT } from "../../../shared/copy/uiText.ts";
+import { UI_TEXT } from "../../../shared/copy/index.ts";
 import QuietSegmentedFilter, { type QuietSegmentedFilterOption } from "../../../shared/components/QuietSegmentedFilter";
 import type { AppCategory } from "../../../shared/classification/categoryTokens.ts";
 import { formatDuration } from "../services/historyFormatting.ts";

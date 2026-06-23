@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
 import { Info, RefreshCw } from "lucide-react";
-import { UI_TEXT } from "../../../shared/copy/uiText.ts";
+import { UI_TEXT } from "../../../shared/copy/index.ts";
 import type { QuietToastTone } from "../../../shared/components/QuietToast";
 import QuietPageHeader from "../../../shared/components/QuietPageHeader";
 import type { UpdateSnapshot } from "../../../shared/types/update";

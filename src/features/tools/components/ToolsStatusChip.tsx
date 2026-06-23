@@ -1,6 +1,6 @@
 import type { LucideIcon } from "lucide-react";
 import QuietTooltip from "../../../shared/components/QuietTooltip.tsx";
-import { UI_TEXT } from "../../../shared/copy/uiText.ts";
+import { UI_TEXT } from "../../../shared/copy/index.ts";
 
 interface ToolsStatusChipProps {
   label: string;

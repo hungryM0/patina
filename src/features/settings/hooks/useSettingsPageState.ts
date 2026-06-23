@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import { setUiTextLanguage, UI_TEXT } from "../../../shared/copy/uiText.ts";
+import { setUiTextLanguage, UI_TEXT } from "../../../shared/copy/index.ts";
 import type { QuietToastTone } from "../../../shared/components/QuietToast";
 import { useQuietDialogs } from "../../../shared/hooks/useQuietDialogs";
 import { getSettingsBootstrapCache, setSettingsBootstrapCache } from "../services/settingsBootstrapCache";
@@ -24,7 +24,6 @@ import type {
   StorageSnapshot,
 } from "../services/settingsRuntimeAdapterService.ts";
 import { useRemoteBackupState } from "./useRemoteBackupState.ts";
-import { getStorageSettingsCopy } from "../copy/storageSettingsCopy.ts";
 import { toEbwebviewCachePath } from "../services/storagePathDisplay.ts";
 
 const buildCleanupOptions = (): Array<{ value: CleanupRange; label: string }> => [
@@ -346,7 +345,7 @@ export function useSettingsPageState({
 
   const handleScheduleWebviewCacheClear = useCallback(async () => {
     if (isStorageBusy) return;
-    const storageText = getStorageSettingsCopy();
+    const storageText = UI_TEXT.settings.storage;
 
     setIsStorageBusy(true);
     try {
@@ -363,7 +362,7 @@ export function useSettingsPageState({
 
   const handleChooseDataDirectory = useCallback(async () => {
     if (isStorageBusy) return;
-    const storageText = getStorageSettingsCopy();
+    const storageText = UI_TEXT.settings.storage;
 
     setIsStorageBusy(true);
     try {
@@ -394,7 +393,7 @@ export function useSettingsPageState({
 
   const handleChooseCacheDirectory = useCallback(async () => {
     if (isStorageBusy) return;
-    const storageText = getStorageSettingsCopy();
+    const storageText = UI_TEXT.settings.storage;
 
     setIsStorageBusy(true);
     try {
@@ -425,7 +424,7 @@ export function useSettingsPageState({
 
   const handleRestoreDefaultDataDirectory = useCallback(async () => {
     if (isStorageBusy || !storageSnapshot?.paths.isCustomDataRoot) return;
-    const storageText = getStorageSettingsCopy();
+    const storageText = UI_TEXT.settings.storage;
 
     setIsStorageBusy(true);
     try {
@@ -453,7 +452,7 @@ export function useSettingsPageState({
 
   const handleRestoreDefaultCacheDirectory = useCallback(async () => {
     if (isStorageBusy || !storageSnapshot?.paths.isCustomWebviewRoot) return;
-    const storageText = getStorageSettingsCopy();
+    const storageText = UI_TEXT.settings.storage;
 
     setIsStorageBusy(true);
     try {
@@ -481,7 +480,7 @@ export function useSettingsPageState({
 
   const handleCancelPendingStorageMigration = useCallback(async () => {
     if (isStorageBusy) return;
-    const storageText = getStorageSettingsCopy();
+    const storageText = UI_TEXT.settings.storage;
     setIsStorageBusy(true);
     try {
       await SettingsRuntimeAdapterService.cancelPendingStorageMigration();
@@ -496,7 +495,7 @@ export function useSettingsPageState({
   }, [isStorageBusy, notify, refreshStorageSnapshot]);
 
   const handleOpenStorageDirectory = useCallback(async (path: string) => {
-    const storageText = getStorageSettingsCopy();
+    const storageText = UI_TEXT.settings.storage;
     try {
       await SettingsRuntimeAdapterService.openStorageDirectory(path);
     } catch (error) {

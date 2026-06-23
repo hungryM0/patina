@@ -1,7 +1,7 @@
 import { Flag, Pause, Play, RotateCcw, Timer } from "lucide-react";
 import { useEffect, useState } from "react";
 import QuietSegmentedFilter from "../../../shared/components/QuietSegmentedFilter.tsx";
-import { UI_TEXT } from "../../../shared/copy/uiText.ts";
+import { UI_TEXT } from "../../../shared/copy/index.ts";
 import type { TimerMode, ToolsRuntimeSnapshot } from "../../../shared/types/tools.ts";
 import { formatHms } from "../services/toolsViewModel.ts";
 import type { TimerViewModel } from "../types.ts";

@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { UI_TEXT, type UiText } from "../../../shared/copy/uiText.ts";
+import { UI_TEXT, type UiText } from "../../../shared/copy/index.ts";
 import type {
   StartPomodoroInput,
   TimerMode,

@@ -1,4 +1,4 @@
-import { UI_TEXT } from "../copy/uiText.ts";
+import { UI_TEXT } from "../copy/index.ts";
 
 export const CUSTOM_CATEGORY_PREFIX = "custom:" as const;
 

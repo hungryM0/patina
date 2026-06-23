@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { AlarmClock, BellRing, Timer } from "lucide-react";
 import type { ToolsRuntimeSnapshot } from "../../../shared/types/tools.ts";
-import { UI_TEXT, type UiText } from "../../../shared/copy/uiText.ts";
+import { UI_TEXT, type UiText } from "../../../shared/copy/index.ts";
 import { buildToolsViewModelLabels } from "../services/toolsLabels.ts";
 import { toolsRuntimeSnapshotStore } from "../services/toolsRuntimeSnapshotStore.ts";
 import { buildToolsStatusChipViewModels } from "../services/toolsViewModel.ts";

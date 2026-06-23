@@ -1,5 +1,5 @@
 import type { DailySummary } from "../../../shared/types/sessions.ts";
-import { getUiLocale, UI_TEXT } from "../../../shared/copy/uiText.ts";
+import { getUiLocale, UI_TEXT } from "../../../shared/copy/index.ts";
 import { formatDuration } from "../../../shared/lib/durationFormatting.ts";
 
 export interface HistoryChartPoint {

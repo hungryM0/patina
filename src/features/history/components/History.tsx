@@ -4,7 +4,7 @@ import { Clock, Expand, Minus, Plus, Tags, X, ZoomIn } from "lucide-react";
 import { type HistorySession } from "../../../shared/types/sessions";
 import type { WebActivitySegment } from "../../../shared/types/webActivity.ts";
 import type { WebDomainOverride } from "../../../shared/types/webActivity.ts";
-import { getUiLocale, UI_TEXT } from "../../../shared/copy/uiText.ts";
+import { UI_TEXT } from "../../../shared/copy/index.ts";
 import {
   formatDuration,
   formatTime,
@@ -102,63 +102,16 @@ const DAY_SUMMARY_MIN_SPAN_SESSION_MS = 60_000;
 const formatTimelineWindowBoundary = (timeMs: number, dayEndMs: number) => (
   timeMs === dayEndMs ? "24:00" : formatTime(timeMs)
 );
-const getHistoryTimelineModeActionLabel = (mode: HistoryTimelineDisplayMode) => {
-  const isEnglish = getUiLocale() === "en-US";
-  if (mode === "category") {
-    return isEnglish ? "Show by app" : "按应用显示";
-  }
-  return isEnglish ? "Show by category" : "按分类显示";
-};
-const getHistoryFeatureCopy = () => {
-  const isEnglish = getUiLocale() === "en-US";
-  return isEnglish
-    ? {
-      daySummary: "Day Summary",
-      activeDuration: "Active time",
-      activeSpan: "Active span",
-      peakHour: "Peak hour",
-      showHourlyActivityByCategory: "Show by category",
-      showTotalHourlyActivity: "Show total activity",
-      dayDistribution: "Day Distribution",
-      distributionByApp: "Apps",
-      distributionByCategory: "Categories",
-      distributionByWeb: "Web",
-      timelineTabApp: "Apps",
-      timelineTabWeb: "Web",
-      timelineAxis: "Day Timeline",
-      openTimeline: "Open timeline",
-      openTimelineZoom: "Open timeline zoom",
-      timelineZoom: "Timeline zoom",
-      timelineWindowLabel: (start: string, end: string) => `${start} - ${end}`,
-      emptyTimelineWindow: "No records in this time range",
-    }
-    : {
-      daySummary: "当日摘要",
-      activeDuration: "活跃时长",
-      activeSpan: "活跃跨度",
-      peakHour: "高峰时段",
-      showHourlyActivityByCategory: "按分类显示",
-      showTotalHourlyActivity: "显示总活动",
-      dayDistribution: "当日分布",
-      distributionByApp: "应用",
-      distributionByCategory: "分类",
-      distributionByWeb: "网页",
-      timelineTabApp: "应用",
-      timelineTabWeb: "网页",
-      timelineAxis: "时间轴",
-      openTimeline: "打开时间线",
-      openTimelineZoom: "打开时间轴缩放",
-      timelineZoom: "时间轴缩放",
-      timelineWindowLabel: (start: string, end: string) => `${start} - ${end}`,
-      emptyTimelineWindow: "当前时间段暂无记录",
-    };
-};
-const getHourlyActivityModeActionLabel = (mode: HourlyActivityChartMode) => {
-  const copy = getHistoryFeatureCopy();
-  return mode === "category"
-    ? copy.showTotalHourlyActivity
-    : copy.showHourlyActivityByCategory;
-};
+const getHistoryTimelineModeActionLabel = (mode: HistoryTimelineDisplayMode) => (
+  mode === "category"
+    ? UI_TEXT.history.showTimelineByApp
+    : UI_TEXT.history.showTimelineByCategory
+);
+const getHourlyActivityModeActionLabel = (mode: HourlyActivityChartMode) => (
+  mode === "category"
+    ? UI_TEXT.history.showTotalHourlyActivity
+    : UI_TEXT.history.showHourlyActivityByCategory
+);
 const formatHistoryDateCacheKey = (date: Date) => {
   return formatLocalDateKey(startOfDay(date));
 };
@@ -294,7 +247,7 @@ export default function History({
   const timelineDetailsTriggerRef = useRef<HTMLElement | null>(null);
   const timelineViewportWasPannedRef = useRef(false);
   const hasLoadedRef = useRef(false);
-  const historyCopy = getHistoryFeatureCopy();
+  const historyCopy = UI_TEXT.history;
   const resetTimelineViewportForDate = useCallback((date: Date) => {
     timelineViewportWasPannedRef.current = false;
     setTimelineZoomHours(readHistoryTimelineZoomHours());

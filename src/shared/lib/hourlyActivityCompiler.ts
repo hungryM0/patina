@@ -1,6 +1,6 @@
 import { AppClassification } from "../classification/appClassification.ts";
 import type { AppCategory } from "../classification/categoryTokens.ts";
-import { UI_TEXT } from "../copy/uiText.ts";
+import { UI_TEXT } from "../copy/index.ts";
 import type { HistorySession } from "../types/sessions.ts";
 
 export interface HourlyActivityPoint {

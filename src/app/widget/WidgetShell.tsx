@@ -15,7 +15,7 @@ import { useAppThemeMode } from "../hooks/useAppThemeMode.ts";
 import { useWidgetObjectIcon } from "../hooks/useWidgetObjectIcon";
 import { useWidgetWindowState } from "./useWidgetWindowState";
 import { buildWidgetViewModel, isWidgetSelfWindow } from "./widgetViewModel";
-import { getUiText, setUiTextLanguage } from "../../shared/copy/uiText";
+import { getUiText, setUiTextLanguage } from "../../shared/copy/index.ts";
 
 interface WidgetDisplaySnapshot {
   activeWindow: TrackingWindowSnapshot | null;
