@@ -31,6 +31,7 @@
     "check:architecture": "node --experimental-strip-types scripts/check-architecture-boundaries.ts",
     "check:rust-boundaries": "node --experimental-strip-types scripts/check-rust-boundaries.ts",
     "check:bundle": "node --experimental-strip-types scripts/check-bundle-budget.ts",
+    "quality:hotspots": "node --experimental-strip-types scripts/report-code-quality-hotspots.ts",
     "check:frontend": "npm test && npm run test:replay && npm run test:history-timeline && npm run test:update && npm run test:settings && npm run test:widget && npm run test:classification && npm run test:icon-colors && npm run test:data-range && npm run test:data && npm run test:data-chart && npm run test:persistence && npm run test:interaction && npm run test:release && npm run test:warmup && npm run test:background-return && npm run test:tools && npm run test:preload && npm run test:tracker-health && npm run test:ui-smoke && npm run test:ui-browser-smoke && npm run build && npm run check:bundle",
     "check:rust:clippy": "cargo clippy --manifest-path src-tauri/Cargo.toml -- -D warnings",
     "check:rust": "npm run check:rust-boundaries && cargo check --manifest-path src-tauri/Cargo.toml --quiet && cargo test --manifest-path src-tauri/Cargo.toml --quiet && npm run check:rust:clippy",
