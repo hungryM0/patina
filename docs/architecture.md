@@ -241,6 +241,7 @@ src/
 - `data`
 - `classification`
 - `settings`
+- `tools`
 - `about`
 
 支持型 feature 当前包括：
@@ -291,6 +292,7 @@ src/
 - `persistence/`
 - `desktop/`
 - `backup/`
+- `storage/`
 
 而不是优先按技术名命名。
 
