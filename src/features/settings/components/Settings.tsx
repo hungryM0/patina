@@ -60,11 +60,9 @@ export default function Settings({
     handleOpenStorageDirectory,
     idleTimeoutMinutes,
     timelineMergeGapMinutes,
-    minSessionMinutes,
     cleanupOptions,
     idleTimeoutMinutesRange,
     timelineMergeGapMinutesRange,
-    minSessionMinutesRange,
   } = useSettingsPageState({
     onSettingsChanged,
     onColorSchemeSaved,
@@ -173,14 +171,6 @@ export default function Settings({
               minMinutes: idleTimeoutMinutesRange.min,
               maxMinutes: idleTimeoutMinutesRange.max,
               onMinutesChange: (nextMinutes) => handleChange("idleTimeoutSecs", nextMinutes * 60),
-            }}
-            minSessionControl={{
-              label: UI_TEXT.settings.minSessionLabel,
-              hint: UI_TEXT.settings.minSessionHint,
-              minutes: minSessionMinutes,
-              minMinutes: minSessionMinutesRange.min,
-              maxMinutes: minSessionMinutesRange.max,
-              onMinutesChange: (nextMinutes) => handleChange("minSessionSecs", nextMinutes * 60),
             }}
             trackingPaused={draftSettings.trackingPaused}
             onTrackingPausedChange={(nextChecked) => handleChange("trackingPaused", nextChecked)}

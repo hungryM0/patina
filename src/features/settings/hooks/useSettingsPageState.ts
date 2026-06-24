@@ -37,7 +37,6 @@ const buildCleanupOptions = (): Array<{ value: CleanupRange; label: string }> =>
 
 const IDLE_TIMEOUT_MINUTES_RANGE = { min: 5, max: 30 } as const;
 const TIMELINE_MERGE_GAP_MINUTES_RANGE = { min: 1, max: 5 } as const;
-const MIN_SESSION_MINUTES_RANGE = { min: 1, max: 10 } as const;
 
 const clampMinute = (value: number, min: number, max: number) => Math.min(max, Math.max(min, value));
 const secondsToMinute = (seconds: number, min: number, max: number) =>
@@ -536,14 +535,6 @@ export function useSettingsPageState({
       TIMELINE_MERGE_GAP_MINUTES_RANGE.max,
     )
     : TIMELINE_MERGE_GAP_MINUTES_RANGE.min;
-  const minSessionMinutes = draftSettings
-    ? secondsToMinute(
-      draftSettings.minSessionSecs,
-      MIN_SESSION_MINUTES_RANGE.min,
-      MIN_SESSION_MINUTES_RANGE.max,
-    )
-    : MIN_SESSION_MINUTES_RANGE.min;
-
   return {
     dialogs,
     loading,
@@ -582,10 +573,8 @@ export function useSettingsPageState({
     handleOpenFeedback,
     idleTimeoutMinutes,
     timelineMergeGapMinutes,
-    minSessionMinutes,
     cleanupOptions,
     idleTimeoutMinutesRange: IDLE_TIMEOUT_MINUTES_RANGE,
     timelineMergeGapMinutesRange: TIMELINE_MERGE_GAP_MINUTES_RANGE,
-    minSessionMinutesRange: MIN_SESSION_MINUTES_RANGE,
   };
 }

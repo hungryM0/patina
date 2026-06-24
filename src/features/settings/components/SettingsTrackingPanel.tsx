@@ -16,7 +16,6 @@ type MinuteControlProps = {
 type SettingsTrackingPanelProps = {
   idleTimeoutControl: MinuteControlProps;
   timelineMergeGapControl: MinuteControlProps;
-  minSessionControl: MinuteControlProps;
   trackingPaused: boolean;
   onTrackingPausedChange: (nextChecked: boolean) => void;
 };
@@ -78,7 +77,6 @@ function TrackingMinuteField({
 export default function SettingsTrackingPanel({
   idleTimeoutControl,
   timelineMergeGapControl,
-  minSessionControl,
   trackingPaused,
   onTrackingPausedChange,
 }: SettingsTrackingPanelProps) {
@@ -92,7 +90,6 @@ export default function SettingsTrackingPanel({
       <div className="mt-5 space-y-5">
         <TrackingMinuteField {...timelineMergeGapControl} />
         <TrackingMinuteField {...idleTimeoutControl} />
-        <TrackingMinuteField {...minSessionControl} />
 
         <div>
           <label className="text-[11px] font-semibold text-[var(--qp-text-tertiary)] uppercase tracking-[0.06em]">

@@ -650,6 +650,7 @@ export default function SettingsDataSafetyPanel({
             value={restoreStrategy}
             options={restoreStrategyOptions}
             onChange={onRestoreStrategyChange}
+            className="self-start"
           />
         </div>
       </QuietDialog>
